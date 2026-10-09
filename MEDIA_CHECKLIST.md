@@ -1,5 +1,28 @@
 # Media checklist
 
+## Status (October 2026)
+
+52 of 65 files are already in `media/`, collected from papers, official company pages, government sources and Wikimedia Commons. Credit lines are filled in on each card.
+
+**Still missing (13 files):**
+- `2021-06_github-copilot-demo.mp4`: no direct video file exists. Record your own.
+- `2024-05_gpt4o-voice-demo.mp4`: OpenAI hosts the demo only on YouTube.
+- `2025-02_vibe-coding-demo.mp4`: your own screen recording.
+- `2025-03_ghibli-original-photo.jpg` and `2025-03_ghibli-style-version.jpg`: your own photo, and ChatGPT's version of it.
+- `mj-compare_v1.png` … `mj-compare_v8.png`: Midjourney's old official comparison pages are gone. You need to make these yourself.
+
+**Files that differ from the table below:**
+- **Rubik's Cube** (`2019-10_…`): a photo, not a video.
+- **Computer use** (`2024-10_…`): the demo video's title frame, not a video.
+- **Beijing marathon** (`2026-04_…`): a photo, not a video.
+- **Waymo** (`2023-08_…`): filmed in Los Angeles in 2026.
+- **Veo 3** (`2025-05_veo3-…`): Google's official sailor sample with speech, not spaghetti.
+- **Nobel** (`2024-10_…`): a group photo of the 2024 laureates.
+- **DARPA** (`2015-06_…`): shows the robot hanging in its tether after a fall, not the fall itself.
+- **Duplex** (`2018-05_…`): the real call audio over a black frame.
+
+To replace any file, drop a new one in with the same name.
+
 Put every file in `media/`, using exactly the filename shown. Until a file is there, its card shows a placeholder saying what belongs in it. Press **M** in the presentation to see which files are still missing.
 
 **Formats**

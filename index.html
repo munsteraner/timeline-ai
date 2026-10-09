@@ -251,13 +251,15 @@ body.card-open #card { opacity: 1; transform: none; }
 
 #card .media {
   position: relative; background: #000; min-height: 0; min-width: 0;
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden;
 }
+#card .media > * { min-height: 0; min-width: 0; }
+#card .media > img, #card .media > video { justify-self: center; align-self: center; width: 100%; height: 100%; }
 :root[data-theme="light"] #card .media { background: #1d1d1f; }
-#card .media > img, #card .media > video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+#card .media > img, #card .media > video { object-fit: contain; display: block; }
 #card .media .credit {
-  position: absolute; left: .8em; bottom: .5em; font-size: .62em; color: #bbb;
-  background: rgba(0,0,0,.55); padding: .1em .45em; border-radius: .25em; max-width: 90%;
+  grid-row: 2; font-size: .62em; color: #a9a8a2; background: #000;
+  padding: .35em .9em .45em; line-height: 1.3;
 }
 
 #card .text {
@@ -468,7 +470,7 @@ const EVENTS = [
   title:"AI draws its first faces",
   what:"Researchers taught a computer to invent new pictures by pitting two programs against each other: one fakes, the other judges.",
   why:"The results were tiny, grey and blurry, and that was the cutting edge. Drag the slider to see today.",
-  media:{ type:"compare", mode:"slider",
+  media:{ credit:"Left: Goodfellow et al., 2014 (real GAN samples) · Right: Google DeepMind, Nano Banana 2 (official sample)", type:"compare", mode:"slider",
     before:{ src:"media/2014-06_gan-faces-original-paper.png", label:"2014", pixel:true,
       desc:"Real sample faces from Figure 2 of Goodfellow et al. (2014), the original GAN paper. Must be the real output, not a recreation." },
     after:{ src:"media/2026_ai-portrait-today.jpg", label:"2026",
@@ -479,7 +481,7 @@ const EVENTS = [
   title:"AI teaches itself Atari games",
   what:"One program learned to play 49 classic Atari games using nothing but the screen and the score.",
   why:"Nobody told it the rules. In Breakout it discovered by itself that tunnelling behind the wall wins faster.",
-  media:{ type:"video", src:"media/2015-02_deepmind-atari-breakout.mp4",
+  media:{ credit:"Video: Google DeepMind (Mnih et al., Nature 2015)", type:"video", src:"media/2015-02_deepmind-atari-breakout.mp4",
     desc:"DeepMind's DQN agent playing Atari Breakout and digging the tunnel." },
   sources:[{ label:"nature.com: Mnih et al. 2015", url:"https://www.nature.com/articles/nature14236" }] },
 
@@ -487,7 +489,7 @@ const EVENTS = [
   title:"Rescue robots keep falling over",
   what:"At a US government contest, the world's best robots tried to open doors, turn valves and climb stairs.",
   why:"Many simply toppled over. This is where humanoid robots stood in 2015. Remember it for 2026.",
-  media:{ type:"video", src:"media/2015-06_darpa-robots-falling.mp4",
+  media:{ credit:"Video: US DoD / AFN, DARPA Robotics Challenge Finals 2015 (public domain)", type:"video", src:"media/2015-06_darpa-robots-falling.mp4",
     desc:"Compilation of robots falling at the DARPA Robotics Challenge Finals, June 2015." },
   sources:[{ label:"Wikipedia: DARPA Robotics Challenge", url:"https://en.wikipedia.org/wiki/DARPA_Robotics_Challenge" }] },
 
@@ -495,7 +497,7 @@ const EVENTS = [
   title:"AlphaGo beats Go champion Lee Sedol",
   what:"Google DeepMind's AlphaGo beat Lee Sedol, one of the world's best players of the board game Go, by four games to one.",
   why:"Go has more possible positions than there are atoms in the universe. Experts thought this was still a decade away.",
-  media:{ type:"image", src:"media/2016-03_alphago-lee-sedol-match.jpg",
+  media:{ credit:"Photo: Google DeepMind", type:"image", src:"media/2016-03_alphago-lee-sedol-match.jpg",
     desc:"Photo of the AlphaGo vs. Lee Sedol match in Seoul, March 2016." },
   sources:[{ label:"Wikipedia: AlphaGo versus Lee Sedol", url:"https://en.wikipedia.org/wiki/AlphaGo_versus_Lee_Sedol" }] },
 
@@ -503,7 +505,7 @@ const EVENTS = [
   title:"Microsoft's chatbot lasts 16 hours",
   what:"Microsoft launched Tay, a chatbot that learned from Twitter users, who quickly taught it to post offensive messages.",
   why:"It was pulled offline within a day. Chatbots back then mostly parroted what they heard.",
-  media:{ type:"image", src:"media/2016-03_microsoft-tay-profile.png",
+  media:{ credit:"Screenshot: BBC News, 25 Mar 2016", type:"image", src:"media/2016-03_microsoft-tay-profile.png",
     desc:"Screenshot of Tay's Twitter profile or a news headline about its shutdown (no offensive tweets)." },
   sources:[{ label:"Wikipedia: Tay (chatbot)", url:"https://en.wikipedia.org/wiki/Tay_(chatbot)" }] },
 
@@ -511,7 +513,7 @@ const EVENTS = [
   title:"Computer voices start sounding human",
   what:"DeepMind's WaveNet created speech one tiny slice of sound at a time instead of gluing recorded snippets together.",
   why:"In listening tests, people rated it far more natural than the robotic computer voices of the time.",
-  media:{ type:"audio", src:"media/2016-09_wavenet-speech-samples.mp3",
+  media:{ credit:"Audio: Google DeepMind · first an older computer voice, then WaveNet", type:"audio", src:"media/2016-09_wavenet-speech-samples.mp3",
     desc:"Old-style computer voice followed by a WaveNet sample, from DeepMind's WaveNet blog post." },
   sources:[{ label:"deepmind.google: WaveNet", url:"https://deepmind.google/discover/blog/wavenet-a-generative-model-for-raw-audio/" }] },
 
@@ -519,7 +521,7 @@ const EVENTS = [
   title:"Speech recognition matches human typists",
   what:"Microsoft's system transcribed recorded phone conversations about as accurately as professional transcribers.",
   why:"Understanding messy, casual human speech had been a goal of computer science for decades.",
-  media:{ type:"image", src:"media/2016-10_microsoft-speech-parity.jpg",
+  media:{ credit:"Photo: Dan DeLong / Microsoft", type:"image", src:"media/2016-10_microsoft-speech-parity.jpg",
     desc:"Photo of the Microsoft research team, or a headline about reaching human parity." },
   sources:[{ label:"blogs.microsoft.com", url:"https://blogs.microsoft.com/blog/2016/10/18/historic-milestone-microsoft-researchers-achieve-human-parity-conversational-speech-recognition/" }] },
 
@@ -527,7 +529,7 @@ const EVENTS = [
   title:"AI beats poker professionals",
   what:"Carnegie Mellon's Libratus beat four top professional poker players over 20 days and 120,000 hands.",
   why:"Unlike chess, poker means hidden cards and bluffing. The AI had to win without knowing everything.",
-  media:{ type:"image", src:"media/2017-01_libratus-poker-match.jpg",
+  media:{ credit:"Photo: Carnegie Mellon University", type:"image", src:"media/2017-01_libratus-poker-match.jpg",
     desc:"Photo from the 'Brains vs. AI' poker match in Pittsburgh, January 2017." },
   sources:[{ label:"cmu.edu", url:"https://www.cmu.edu/news/stories/archives/2017/january/AI-beats-poker-pros.html" }] },
 
@@ -535,7 +537,7 @@ const EVENTS = [
   title:"AI masters chess in a day",
   what:"AlphaZero was given only the rules of chess and learned by playing millions of games against itself.",
   why:"Within 24 hours it was beating the world's strongest chess program, outdoing centuries of human chess knowledge.",
-  media:{ type:"image", src:"media/2017-12_alphazero-chess.jpg",
+  media:{ credit:"Figure: Silver et al., DeepMind (2017)", type:"image", src:"media/2017-12_alphazero-chess.jpg",
     desc:"Chessboard from an AlphaZero game, or DeepMind's AlphaZero illustration." },
   sources:[{ label:"arxiv.org: Silver et al. 2017", url:"https://arxiv.org/abs/1712.01815" }] },
 
@@ -544,7 +546,7 @@ const EVENTS = [
   what:"Google showed an assistant calling a real hair salon and booking an appointment, complete with “mm-hmm”s.",
   why:"The person on the other end did not seem to notice they were talking to a machine.",
   note:"Later reporting found that a share of real-world Duplex calls were placed or completed by human operators.",
-  media:{ type:"video", src:"media/2018-05_google-duplex-salon-call.mp4", sound:true,
+  media:{ credit:"Audio: Google (the real salon call)", type:"video", src:"media/2018-05_google-duplex-salon-call.mp4", sound:true,
     desc:"The hair-salon call from the Google I/O 2018 keynote (audio with on-screen transcript)." },
   sources:[{ label:"research.google: Google Duplex", url:"https://research.google/blog/google-duplex-an-ai-system-for-accomplishing-real-world-tasks-over-the-phone/" }] },
 
@@ -552,7 +554,7 @@ const EVENTS = [
   title:"Paying for a self-driving taxi",
   what:"Waymo started charging riders for self-driving trips around Phoenix, at first with a safety driver on board.",
   why:"Robotaxis moved from the test track to a service with paying customers.",
-  media:{ type:"image", src:"media/2018-12_waymo-one-phoenix.jpg",
+  media:{ credit:"Image: Waymo", type:"image", src:"media/2018-12_waymo-one-phoenix.jpg",
     desc:"Waymo One minivan in Phoenix, 2018 (Waymo press image)." },
   sources:[{ label:"waymo.com", url:"https://waymo.com/blog/2018/12/waymo-one-next-step-on-our-self-driving/" }] },
 
@@ -560,7 +562,7 @@ const EVENTS = [
   title:"AI “too dangerous to release”",
   what:"OpenAI held back the full version of its GPT-2 text generator, worried it could mass-produce fake news.",
   why:"Its writing was fluent for its time but often drifted into nonsense. Today's chatbots are in a different league.",
-  media:{ type:"image", src:"media/2019-02_gpt2-unicorn-sample.png",
+  media:{ credit:"Text: OpenAI (Radford et al., 2019)", type:"image", src:"media/2019-02_gpt2-unicorn-sample.png",
     desc:"Screenshot of GPT-2's famous 'unicorns in the Andes' sample text from OpenAI's post." },
   sources:[{ label:"openai.com: Better language models", url:"https://openai.com/index/better-language-models/" }] },
 
@@ -568,7 +570,7 @@ const EVENTS = [
   title:"Faces of people who don't exist",
   what:"A website showed a brand-new, photo-quality face every time you refreshed it. None of these people are real.",
   why:"Less than five years after the blurry 2014 faces, AI faces could pass for photographs.",
-  media:{ type:"image", src:"media/2019-02_stylegan-faces.jpg",
+  media:{ credit:"Image: NVIDIA, Karras et al. (CC BY-NC 4.0)", type:"image", src:"media/2019-02_stylegan-faces.jpg",
     desc:"Grid of StyleGAN faces (from the StyleGAN paper / official repository)." },
   sources:[{ label:"arxiv.org: StyleGAN (Karras et al.)", url:"https://arxiv.org/abs/1812.04948" },
            { label:"thispersondoesnotexist.com", url:"https://thispersondoesnotexist.com/" }] },
@@ -577,7 +579,7 @@ const EVENTS = [
   title:"AI beats video-game world champions",
   what:"OpenAI Five beat OG, the reigning world-champion team in the video game Dota 2.",
   why:"The game demands real-time teamwork and long-term strategy among five players.",
-  media:{ type:"image", src:"media/2019-04_openai-five-vs-og.jpg",
+  media:{ credit:"Image: OpenAI", type:"image", src:"media/2019-04_openai-five-vs-og.jpg",
     desc:"Photo from the OpenAI Five Finals event, April 2019." },
   sources:[{ label:"Wikipedia: OpenAI Five", url:"https://en.wikipedia.org/wiki/OpenAI_Five" }] },
 
@@ -586,7 +588,7 @@ const EVENTS = [
   what:"OpenAI trained a human-like robot hand to solve a Rubik's Cube with one hand.",
   why:"The hard part was the fingers, not the puzzle. It learned dexterity in simulation and kept going when researchers poked it.",
   note:"The solving steps came from a standard algorithm. The AI learned the hand movements.",
-  media:{ type:"image", src:"media/2019-10_openai-robot-hand-rubiks-cube.jpg",
+  media:{ credit:"Image: OpenAI", type:"image", src:"media/2019-10_openai-robot-hand-rubiks-cube.jpg",
     desc:"OpenAI's robot hand solving the cube (from OpenAI's 'Solving Rubik's Cube' post)." },
   sources:[{ label:"openai.com: Solving Rubik's Cube", url:"https://openai.com/index/solving-rubiks-cube/" }] },
 
@@ -595,7 +597,7 @@ const EVENTS = [
   what:"The Guardian published an opinion piece by GPT-3: “A robot wrote this entire article. Are you scared yet, human?”",
   why:"For many readers it was the first time AI produced paragraphs of convincing argument.",
   note:"Editors assembled the piece from eight different AI outputs.",
-  media:{ type:"image", src:"media/2020-09_guardian-gpt3-article.png",
+  media:{ credit:"Screenshot: The Guardian, 8 Sep 2020", type:"image", src:"media/2020-09_guardian-gpt3-article.png",
     desc:"Screenshot of the Guardian article headline." },
   sources:[{ label:"theguardian.com", url:"https://www.theguardian.com/commentisfree/2020/sep/08/robot-wrote-this-article-gpt-3" }] },
 
@@ -603,7 +605,7 @@ const EVENTS = [
   title:"AlphaFold cracks protein folding",
   what:"DeepMind's AlphaFold predicted the 3D shapes of proteins, the tiny machines in every living cell, about as accurately as lab experiments.",
   why:"Working out a single protein's shape could take a scientist years. This was a 50-year-old challenge in biology.",
-  media:{ type:"video", src:"media/2020-11_alphafold-protein-prediction.mp4",
+  media:{ credit:"Animation: Google DeepMind (blue = AI prediction, green = lab result)", type:"video", src:"media/2020-11_alphafold-protein-prediction.mp4",
     desc:"DeepMind's animation of a predicted protein structure overlaid on the experimental one." },
   sources:[{ label:"deepmind.google: AlphaFold", url:"https://deepmind.google/discover/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology/" }] },
 
@@ -611,7 +613,7 @@ const EVENTS = [
   title:"An armchair shaped like an avocado",
   what:"OpenAI's DALL·E turned short text descriptions into pictures, such as “an armchair in the shape of an avocado”.",
   why:"For the first time you could type an idea and get an image, even if it looked like clip art.",
-  media:{ type:"image", src:"media/2021-01_dalle-avocado-armchair.jpg",
+  media:{ credit:"Images: OpenAI, DALL·E (2021)", type:"image", src:"media/2021-01_dalle-avocado-armchair.jpg",
     desc:"The avocado-armchair examples from OpenAI's original DALL·E post." },
   sources:[{ label:"openai.com: DALL·E", url:"https://openai.com/index/dall-e/" }] },
 
@@ -627,7 +629,7 @@ const EVENTS = [
   title:"AI enters programming contests",
   what:"DeepMind's AlphaCode solved contest puzzles at about the level of an average human competitor.",
   why:"That's average among people who solve hard puzzles for fun. Watch what happens by September 2025.",
-  media:{ type:"image", src:"media/2022-02_alphacode-contest.png",
+  media:{ credit:"Image: Google DeepMind", type:"image", src:"media/2022-02_alphacode-contest.png",
     desc:"A contest problem with AlphaCode's solution (from DeepMind's AlphaCode post)." },
   sources:[{ label:"deepmind.google: AlphaCode", url:"https://deepmind.google/discover/blog/competitive-programming-with-alphacode/" }] },
 
@@ -635,7 +637,7 @@ const EVENTS = [
   title:"Realistic pictures from a sentence",
   what:"OpenAI's DALL·E 2 produced sharp, realistic images from a typed description.",
   why:"Fifteen months after the avocado chair, the clip-art look was gone.",
-  media:{ type:"image", src:"media/2022-04_dalle2-astronaut-horse.jpg",
+  media:{ credit:"Image: OpenAI, DALL·E 2 (2022)", type:"image", src:"media/2022-04_dalle2-astronaut-horse.jpg",
     desc:"'An astronaut riding a horse in photorealistic style', an official DALL·E 2 launch example." },
   sources:[{ label:"openai.com: DALL·E 2", url:"https://openai.com/index/dall-e-2/" }] },
 
@@ -643,7 +645,7 @@ const EVENTS = [
   title:"200 million protein shapes, free",
   what:"DeepMind and EMBL released predicted shapes for over 200 million proteins, nearly every one known to science.",
   why:"It works like a free search engine for protein shapes, used by researchers worldwide.",
-  media:{ type:"image", src:"media/2022-07_alphafold-database.jpg",
+  media:{ credit:"Image: Google DeepMind", type:"image", src:"media/2022-07_alphafold-database.jpg",
     desc:"Image from DeepMind's 'protein universe' announcement." },
   sources:[{ label:"deepmind.google", url:"https://deepmind.google/discover/blog/alphafold-reveals-the-structure-of-the-protein-universe/" }] },
 
@@ -651,7 +653,7 @@ const EVENTS = [
   title:"AI artwork wins an art prize",
   what:"Jason Allen won the digital art category at the Colorado State Fair with an image made using Midjourney.",
   why:"He used over 600 prompts plus some retouching, and the judges didn't know the tool was AI.",
-  media:{ type:"image", src:"media/2022-08_theatre-dopera-spatial.jpg",
+  media:{ credit:"Jason M. Allen / Midjourney, 2022", type:"image", src:"media/2022-08_theatre-dopera-spatial.jpg",
     desc:"The winning image 'Théâtre D'opéra Spatial' by Jason M. Allen." },
   sources:[{ label:"Wikipedia: Théâtre D'opéra Spatial", url:"https://en.wikipedia.org/wiki/Th%C3%A9%C3%A2tre_D%27op%C3%A9ra_Spatial" }] },
 
@@ -659,7 +661,7 @@ const EVENTS = [
   title:"ChatGPT launches",
   what:"OpenAI released a free chatbot that anyone could talk to in plain language.",
   why:"One million users in five days and an estimated 100 million within two months. At the time, the fastest-growing app ever.",
-  media:{ type:"image", src:"media/2022-11_chatgpt-launch-interface.png",
+  media:{ credit:"Screenshot: ChatGPT, Dec 2022 (Rolf H Nelson, Wikimedia Commons, CC BY-SA 4.0)", type:"image", src:"media/2022-11_chatgpt-launch-interface.png",
     desc:"Screenshot of the original ChatGPT interface from late 2022 (e.g. via the Internet Archive)." },
   sources:[{ label:"openai.com: Introducing ChatGPT", url:"https://openai.com/index/chatgpt/" }] },
 
@@ -668,7 +670,7 @@ const EVENTS = [
   what:"OpenAI's GPT-4 scored around the top 10% on a simulated bar exam for lawyers, according to OpenAI.",
   why:"The previous model had scored around the bottom 10% on the same test.",
   note:"An independent 2024 study argued that the real percentile was lower.",
-  media:{ type:"image", src:"media/2023-03_gpt4-exam-results-chart.png",
+  media:{ credit:"Chart: OpenAI, GPT-4 Technical Report (2023)", type:"image", src:"media/2023-03_gpt4-exam-results-chart.png",
     desc:"The exam-results chart from OpenAI's GPT-4 announcement." },
   sources:[{ label:"openai.com: GPT-4", url:"https://openai.com/index/gpt-4-research/" }] },
 
@@ -676,7 +678,7 @@ const EVENTS = [
   title:"The Pope's fake puffer jacket",
   what:"An AI image of Pope Francis in a white designer puffer coat spread across the internet.",
   why:"Millions believed it was a real photo, a first for an AI image.",
-  media:{ type:"image", src:"media/2023-03_pope-puffer-jacket-ai.jpg",
+  media:{ credit:"AI-generated with Midjourney by Pablo Xavier, Mar 2023", type:"image", src:"media/2023-03_pope-puffer-jacket-ai.jpg",
     desc:"The Midjourney image of the Pope in a puffer coat (show it labelled 'AI-generated')." },
   sources:[{ label:"theverge.com", url:"https://www.theverge.com/2023/3/27/23657927/ai-pope-image-fake-midjourney-computer-generated-aesthetic" }] },
 
@@ -684,7 +686,7 @@ const EVENTS = [
   title:"Will Smith eats spaghetti",
   what:"A Reddit user posted an AI-generated clip of Will Smith eating spaghetti, made with a free research model.",
   why:"Warped faces and melting pasta: this was the state of AI video. Hold that thought until 2025.",
-  media:{ type:"video", src:"media/2023-03_will-smith-spaghetti-original.mp4",
+  media:{ credit:"Video: u/chaindrop / ModelScope, 2023", type:"video", src:"media/2023-03_will-smith-spaghetti-original.mp4",
     desc:"The original March 2023 clip (ModelScope text-to-video), posted on r/StableDiffusion." },
   sources:[{ label:"Wikipedia: Will Smith Eating Spaghetti test", url:"https://en.wikipedia.org/wiki/Will_Smith_Eating_Spaghetti_test" }] },
 
@@ -692,7 +694,7 @@ const EVENTS = [
   title:"Fake Drake song goes viral",
   what:"“Heart on My Sleeve” used AI copies of Drake's and The Weeknd's voices and racked up millions of plays before being taken down.",
   why:"The two stars never sang it, and many listeners couldn't tell.",
-  media:{ type:"image", src:"media/2023-04_heart-on-my-sleeve-news.jpg",
+  media:{ credit:"Screenshot: BBC News, 17 Apr 2023", type:"image", src:"media/2023-04_heart-on-my-sleeve-news.jpg",
     desc:"News headline or screenshot about the song (no audio, for copyright reasons)." },
   sources:[{ label:"Wikipedia: Heart on My Sleeve", url:"https://en.wikipedia.org/wiki/Heart_on_My_Sleeve_(Ghostwriter977_song)" }] },
 
@@ -701,7 +703,7 @@ const EVENTS = [
   what:"California allowed Waymo to run paid rides around the clock in San Francisco, with nobody in the driver's seat.",
   why:"Self-driving cars stopped being a demo and became something you hail with an app.",
   note:"By early 2026, Waymo said it was giving roughly 400,000 paid rides a week (company figure).",
-  media:{ type:"video", src:"media/2023-08_waymo-empty-driver-seat.mp4",
+  media:{ credit:"Video: driverless Waymo in Los Angeles, Jan 2026 (Alexis Doine, CC0)", type:"video", src:"media/2023-08_waymo-empty-driver-seat.mp4",
     desc:"Footage of a Waymo driving through San Francisco with an empty driver's seat." },
   sources:[{ label:"cpuc.ca.gov", url:"https://www.cpuc.ca.gov/news-and-updates/all-news/cpuc-approves-permits-for-cruise-and-waymo-to-charge-fares-for-passenger-service-in-sf-2023" }] },
 
@@ -709,7 +711,7 @@ const EVENTS = [
   title:"Fake Biden voice calls voters",
   what:"Before a US primary election, robocalls using an AI clone of President Biden's voice told voters to stay home.",
   why:"Within weeks, the US telecoms regulator made AI-voiced robocalls illegal. Cloning a voice had become that easy.",
-  media:{ type:"image", src:"media/2024-01_fcc-ai-robocall-ruling.png",
+  media:{ credit:"Federal Communications Commission, 8 Feb 2024", type:"image", src:"media/2024-01_fcc-ai-robocall-ruling.png",
     desc:"Headline about the New Hampshire robocall or the FCC ruling (Feb 2024)." },
   sources:[{ label:"fcc.gov", url:"https://www.fcc.gov/document/fcc-makes-ai-generated-voices-robocalls-illegal" }] },
 
@@ -717,7 +719,7 @@ const EVENTS = [
   title:"A minute of realistic AI video",
   what:"OpenAI showed Sora, which made clips up to a minute long, like a woman walking down a rainy Tokyo street.",
   why:"Less than a year after the spaghetti clip.",
-  media:{ type:"video", src:"media/2024-02_sora-tokyo-street.mp4",
+  media:{ credit:"Video: OpenAI, Sora (2024)", type:"video", src:"media/2024-02_sora-tokyo-street.mp4",
     desc:"The 'Tokyo street' sample from OpenAI's Sora announcement." },
   sources:[{ label:"openai.com: Sora", url:"https://openai.com/index/sora/" }] },
 
@@ -733,7 +735,7 @@ const EVENTS = [
   title:"Silver medal at the Math Olympiad",
   what:"Google DeepMind's AI solved 4 of 6 problems from the International Mathematical Olympiad, the top contest for high-school students.",
   why:"That's silver-medal level, though it needed up to three days on some problems, and humans had to translate the questions for it.",
-  media:{ type:"image", src:"media/2024-07_alphaproof-imo-silver.png",
+  media:{ credit:"Chart: Google DeepMind", type:"image", src:"media/2024-07_alphaproof-imo-silver.png",
     desc:"Score chart from DeepMind's AlphaProof post." },
   sources:[{ label:"deepmind.google: AlphaProof", url:"https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/" }] },
 
@@ -741,7 +743,7 @@ const EVENTS = [
   title:"AI that thinks before answering",
   what:"OpenAI's o1 took time to “think” through a problem step by step before replying.",
   why:"On a qualifying exam for the US Math Olympiad it jumped from 13% to 83% correct, compared with the previous model.",
-  media:{ type:"image", src:"media/2024-09_openai-o1-math-chart.png",
+  media:{ credit:"Chart: OpenAI, Sept 2024", type:"image", src:"media/2024-09_openai-o1-math-chart.png",
     desc:"The AIME comparison chart from OpenAI's 'Learning to reason' post." },
   sources:[{ label:"openai.com: Learning to reason", url:"https://openai.com/index/learning-to-reason-with-llms/" }] },
 
@@ -749,7 +751,7 @@ const EVENTS = [
   title:"AI wins a Nobel Prize",
   what:"The Chemistry Nobel went to Demis Hassabis and John Jumper of Google DeepMind for AlphaFold, shared with David Baker.",
   why:"It went from computer experiment to science's highest honour in four years. The day before, the Physics prize went to AI pioneers Geoffrey Hinton and John Hopfield.",
-  media:{ type:"image", src:"media/2024-10_nobel-chemistry-announcement.jpg",
+  media:{ credit:"© Nobel Prize Outreach. Photo: Clément Morin (2024 laureates, incl. Baker, Hassabis, Jumper)", type:"image", src:"media/2024-10_nobel-chemistry-announcement.jpg",
     desc:"The Nobel Prize in Chemistry 2024 announcement graphic or laureate photo." },
   sources:[{ label:"nobelprize.org: Chemistry 2024", url:"https://www.nobelprize.org/prizes/chemistry/2024/press-release/" }] },
 
@@ -757,7 +759,7 @@ const EVENTS = [
   title:"AI learns to use a computer",
   what:"Anthropic released a version of Claude that could operate a computer like a person: look at the screen, move the mouse, click and type.",
   why:"AI could now do tasks in ordinary software, not just chat about them.",
-  media:{ type:"image", src:"media/2024-10_claude-computer-use-demo.jpg",
+  media:{ credit:"Anthropic, Oct 2024", type:"image", src:"media/2024-10_claude-computer-use-demo.jpg",
     desc:"Clip from Anthropic's computer-use demo video, October 2024." },
   sources:[{ label:"anthropic.com", url:"https://www.anthropic.com/news/3-5-models-and-computer-use" }] },
 
@@ -765,7 +767,7 @@ const EVENTS = [
   title:"Chinese AI shakes Wall Street",
   what:"Chinese startup DeepSeek released R1, a free model that rivalled the best American ones, and its app shot to No. 1 in the US App Store.",
   why:"Chipmaker Nvidia lost about $590 billion in value in a single day, the biggest one-day drop in US stock-market history.",
-  media:{ type:"image", src:"media/2025-01_nvidia-stock-drop-chart.png",
+  media:{ credit:"Chart from public price data (stockanalysis.com)", type:"image", src:"media/2025-01_nvidia-stock-drop-chart.png",
     desc:"Chart of Nvidia's share price on 27 Jan 2025 (make your own from public price data)." },
   sources:[{ label:"cnbc.com", url:"https://www.cnbc.com/2025/01/27/nvidia-sheds-almost-600-billion-in-market-cap-biggest-drop-ever.html" }] },
 
@@ -792,19 +794,19 @@ const EVENTS = [
   title:"AI improves a 1969 math recipe",
   what:"DeepMind's AlphaEvolve found a faster way to multiply one kind of small grid of numbers, beating a method that had stood since 1969.",
   why:"The same system found tweaks that freed up about 0.7% of Google's worldwide computing power.",
-  media:{ type:"image", src:"media/2025-05_alphaevolve-diagram.png",
+  media:{ credit:"Image: Google DeepMind", type:"image", src:"media/2025-05_alphaevolve-diagram.png",
     desc:"Diagram from DeepMind's AlphaEvolve post." },
   sources:[{ label:"deepmind.google: AlphaEvolve", url:"https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/" }] },
 
 { id:"veo3", date:"2025-05", track:"video", tier:1,
   title:"AI video learns to talk",
   what:"Google's Veo 3 created realistic video with matching dialogue, music and sound effects from a text prompt.",
-  why:"Two years after the melting spaghetti. Compare for yourself.",
-  media:{ type:"compare", mode:"side",
+  why:"Two years after the melting spaghetti, AI video has realistic faces, voices and sound. Compare for yourself.",
+  media:{ credit:"Left: u/chaindrop / ModelScope, 2023 · Right: Google DeepMind, official Veo 3 sample", type:"compare", mode:"side",
     before:{ src:"media/2023-03_will-smith-spaghetti-original.mp4", label:"2023", kind:"video",
       desc:"The original March 2023 spaghetti clip (same file as the 2023 milestone)." },
     after:{ src:"media/2025-05_veo3-spaghetti-with-sound.mp4", label:"2025 · Veo 3", kind:"video", sound:true,
-      desc:"A spaghetti-eating clip made with Veo 3 (or Veo 3.1), with sound. Your own generation, or a properly credited one." } },
+      desc:"An official Veo 3 sample with sound (an old sailor speaking). Replace with your own Veo spaghetti clip if you like." } },
   sources:[{ label:"deepmind.google: Veo", url:"https://deepmind.google/models/veo/" }] },
 
 { id:"imo", date:"2025-07", track:"science", tier:1,
@@ -812,7 +814,7 @@ const EVENTS = [
   what:"AI systems from Google DeepMind and OpenAI each solved 5 of 6 problems at the International Mathematical Olympiad, which is gold-medal level.",
   why:"One year after silver, they worked in plain language within the same 4.5-hour limits as the teenage contestants.",
   note:"Google DeepMind's result was graded by the official IMO coordinators. OpenAI's was graded by former medallists.",
-  media:{ type:"image", src:"media/2025-07_imo-gold-ai.jpg",
+  media:{ credit:"Image: Google DeepMind", type:"image", src:"media/2025-07_imo-gold-ai.jpg",
     desc:"Image from DeepMind's IMO gold announcement, or an IMO 2025 photo." },
   sources:[{ label:"deepmind.google: IMO gold", url:"https://deepmind.google/discover/blog/advanced-version-of-gemini-with-deep-think-officially-achieves-gold-medal-standard-at-the-international-mathematical-olympiad/" }] },
 
@@ -820,7 +822,7 @@ const EVENTS = [
   title:"A human beats AI, barely",
   what:"Polish programmer Przemysław “Psyho” Dębiak won a 10-hour world-final coding contest in Tokyo. An OpenAI model came second.",
   why:"He won by about 9.5% and posted: “Humanity has prevailed (for now!)”.",
-  media:{ type:"image", src:"media/2025-07_atcoder-final-scoreboard.png",
+  media:{ credit:"Standings: AtCoder, posted by Psyho (@FakePsyho)", type:"image", src:"media/2025-07_atcoder-final-scoreboard.png",
     desc:"Final scoreboard of the AtCoder World Tour Finals 2025 Heuristic." },
   sources:[{ label:"euronews.com", url:"https://euronews.com/next/2025/07/22/humanity-has-won-so-far-meet-the-worlds-best-programmer-who-beat-ai-and-chatgpt" }] },
 
@@ -828,7 +830,7 @@ const EVENTS = [
   title:"Top AI model, free for everyone",
   what:"OpenAI made GPT-5 the default model in ChatGPT, including for free users.",
   why:"OpenAI said ChatGPT was approaching 700 million weekly users, roughly one in twelve people on Earth.",
-  media:{ type:"image", src:"media/2025-08_gpt5-launch.png",
+  media:{ credit:"Image: OpenAI", type:"image", src:"media/2025-08_gpt5-launch.png",
     desc:"Screenshot from OpenAI's GPT-5 announcement." },
   sources:[{ label:"openai.com: Introducing GPT-5", url:"https://openai.com/index/introducing-gpt-5/" }] },
 
@@ -836,7 +838,7 @@ const EVENTS = [
   title:"AI tops the coding world finals",
   what:"At the world finals of the top university programming contest (ICPC), OpenAI's system solved all 12 problems and Google's solved 10.",
   why:"No human team solved all 12, just three and a half years after AlphaCode was merely “average”.",
-  media:{ type:"image", src:"media/2025-09_icpc-world-finals-results.png",
+  media:{ credit:"Chart: Google DeepMind", type:"image", src:"media/2025-09_icpc-world-finals-results.png",
     desc:"Results graphic from DeepMind's ICPC post." },
   sources:[{ label:"deepmind.google: ICPC", url:"https://deepmind.google/discover/blog/gemini-achieves-gold-level-performance-at-the-international-collegiate-programming-contest-world-finals/" }] },
 
@@ -844,7 +846,7 @@ const EVENTS = [
   title:"AI video app tops the charts",
   what:"OpenAI released Sora 2 with a TikTok-style app where anyone can make videos with sound, including of themselves.",
   why:"It shot to No. 1 on Apple's US App Store within days.",
-  media:{ type:"video", src:"media/2025-09_sora2-sample.mp4", sound:true,
+  media:{ credit:"Video: OpenAI, Sora 2 (official sample)", type:"video", src:"media/2025-09_sora2-sample.mp4", sound:true,
     desc:"An official Sora 2 sample clip from OpenAI's announcement." },
   sources:[{ label:"openai.com: Sora 2", url:"https://openai.com/index/sora-2/" }] },
 
@@ -853,7 +855,7 @@ const EVENTS = [
   what:"“Walk My Walk” by the AI act Breaking Rust reached No. 1 on Billboard's Country Digital Song Sales chart.",
   why:"It was the first time an AI-made song topped any Billboard chart.",
   note:"It's a downloads chart, and about 3,000 downloads were enough.",
-  media:{ type:"image", src:"media/2025-11_billboard-breaking-rust.png",
+  media:{ credit:"Screenshot: Billboard, 12 Nov 2025", type:"image", src:"media/2025-11_billboard-breaking-rust.png",
     desc:"Screenshot of the chart or of a news headline." },
   sources:[{ label:"billboard.com", url:"https://www.billboard.com/pro/ai-music-artists-charts-popular/" }] },
 
@@ -862,7 +864,7 @@ const EVENTS = [
   what:"GPT-5.2 Pro solved Erdős problem #728, one of hundreds of open questions left by the famous mathematician Paul Erdős, and a computer checked the proof.",
   why:"Within months, AI had helped settle around 100 Erdős problems, many by finding forgotten solutions in old papers.",
   note:"Terence Tao called problems like this the “lowest hanging fruit”.",
-  media:{ type:"image", src:"media/2026-01_erdos-problems-site.png",
+  media:{ credit:"Screenshot: erdosproblems.com", type:"image", src:"media/2026-01_erdos-problems-site.png",
     desc:"Screenshot of erdosproblems.com showing problem #728 as solved." },
   sources:[{ label:"arxiv.org: Erdős #728 write-up", url:"https://arxiv.org/abs/2601.07421" },
            { label:"quantamagazine.org", url:"https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai-20260803/" }] },
@@ -872,7 +874,7 @@ const EVENTS = [
   what:"OpenClaw, a free AI assistant that can act on your computer, went viral, and users' bots flocked to Moltbook, a Reddit-style site for AI agents.",
   why:"Over a million AI agents posted, commented and voted while humans could only watch.",
   note:"Many viral posts were steered by humans, and both projects had serious security problems.",
-  media:{ type:"image", src:"media/2026-01_moltbook-screenshot.png",
+  media:{ credit:"Screenshot: moltbook.com", type:"image", src:"media/2026-01_moltbook-screenshot.png",
     desc:"Screenshot of the Moltbook front page." },
   sources:[{ label:"Wikipedia: OpenClaw", url:"https://en.wikipedia.org/wiki/OpenClaw" }] },
 
@@ -880,7 +882,7 @@ const EVENTS = [
   title:"AI team builds a compiler",
   what:"Sixteen Claude agents worked together for two weeks and wrote a C compiler (the program that turns code into software) that can build Linux.",
   why:"Around 100,000 lines of code for about $20,000, a job that normally takes expert teams much longer.",
-  media:{ type:"image", src:"media/2026-02_claude-c-compiler.png",
+  media:{ credit:"Screenshot: Anthropic", type:"image", src:"media/2026-02_claude-c-compiler.png",
     desc:"Screenshot from Anthropic's engineering post." },
   sources:[{ label:"anthropic.com: Building a C compiler", url:"https://www.anthropic.com/engineering/building-c-compiler" }] },
 
@@ -888,7 +890,7 @@ const EVENTS = [
   title:"Fake Cruise vs. Pitt alarms Hollywood",
   what:"A 15-second AI fight scene between “Tom Cruise” and “Brad Pitt”, made with ByteDance's Seedance 2.0 from a two-line prompt, went viral.",
   why:"Disney, Paramount and Netflix sent legal threats within days. A Deadpool screenwriter wrote: “It's likely over for us.”",
-  media:{ type:"image", src:"media/2026-02_seedance-hollywood-headline.png",
+  media:{ credit:"Screenshot: Deadline, 12 Feb 2026", type:"image", src:"media/2026-02_seedance-hollywood-headline.png",
     desc:"News headline about the clip and Hollywood's reaction (not the clip itself)." },
   sources:[{ label:"Wikipedia: Seedance 2.0", url:"https://en.wikipedia.org/wiki/Seedance_2.0" }] },
 
@@ -896,7 +898,7 @@ const EVENTS = [
   title:"Mathematicians set AI a real test",
   what:"Eleven leading mathematicians, including a Fields Medal winner, challenged AI with ten unpublished research problems.",
   why:"AI solved several but came nowhere near all ten. On this test, humans were still ahead.",
-  media:{ type:"image", src:"media/2026-02_first-proof-challenge.png",
+  media:{ credit:"Screenshot: Scientific American, 14 Feb 2026", type:"image", src:"media/2026-02_first-proof-challenge.png",
     desc:"Screenshot of the First Proof website or the Scientific American article." },
   sources:[{ label:"scientificamerican.com", url:"https://www.scientificamerican.com/article/first-proof-is-ais-toughest-math-test-yet-the-results-are-mixed" }] },
 
@@ -921,7 +923,7 @@ const EVENTS = [
   what:"In Beijing, a humanoid robot ran a half marathon in 50 minutes 26 seconds, finding its own way round the course.",
   why:"That's faster than the human world record of about 57 minutes. A year earlier, the winning robot needed 2 hours 40 minutes.",
   note:"The robots ran their own course, so it isn't an official record.",
-  media:{ type:"compare", mode:"side",
+  media:{ credit:"Left: US DoD / AFN, 2015 · Right: Beijing E-Town via english.beijing.gov.cn, 2026", type:"compare", mode:"side",
     before:{ src:"media/2015-06_darpa-robots-falling.mp4", label:"2015", kind:"video",
       desc:"The DARPA 2015 falling-robots clip (same file as the 2015 milestone)." },
     after:{ src:"media/2026-04_beijing-robot-half-marathon.jpg", label:"2026", kind:"image",
@@ -932,7 +934,7 @@ const EVENTS = [
   title:"AI disproves an 80-year-old conjecture",
   what:"An OpenAI model found a counterexample to Erdős's 1946 “unit distance” conjecture, a famous question about dots on a flat surface.",
   why:"Leading mathematicians checked it, and Quanta Magazine called it the first historically significant proof to come from an AI.",
-  media:{ type:"image", src:"media/2026-05_unit-distance-diagram.png",
+  media:{ credit:"Illustration of the question (not the AI's proof)", type:"image", src:"media/2026-05_unit-distance-diagram.png",
     desc:"A simple diagram explaining the unit distance problem (points with equal-length connections)." },
   sources:[{ label:"cdn.openai.com: human-verified write-up", url:"https://cdn.openai.com/pdf/74c24085-19b0-4534-9c90-465b8e29ad73/unit-distance-remarks.pdf" },
            { label:"quantamagazine.org", url:"https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai-20260803/" }] },
@@ -942,7 +944,7 @@ const EVENTS = [
   what:"OpenAI announced that about 10,000 AI agents, working for 88 hours, had produced a computer-checked proof about the Navier–Stokes equations, which describe how fluids flow.",
   why:"It's one of the seven “Millennium Prize Problems”, each with a $1 million reward. If confirmed, AI will have cracked one of the hardest problems in mathematics.",
   note:"Not yet verified. It covers only fluids pushed by an outside force, the Clay Institute will decide only after peer review, and human researchers dispute the credit.",
-  media:{ type:"image", src:"media/2026-09_fluid-vortex-visualization.jpg",
+  media:{ credit:"Illustration: NASA Langley wake-vortex study (public domain)", type:"image", src:"media/2026-09_fluid-vortex-visualization.jpg",
     desc:"A fluid / vortex visualization (e.g. a public-domain NASA image of swirling flow)." },
   sources:[{ label:"openai.com: Navier–Stokes", url:"https://openai.com/index/navier-stokes-solution/" },
            { label:"science.org", url:"https://www.science.org/content/article/how-ai-math-breakthrough-ignited-controversy" }] }
