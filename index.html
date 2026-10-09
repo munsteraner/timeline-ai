@@ -1,0 +1,1688 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Far AI Has Come</title>
+<style>
+/* =====================================================================
+   THEME TOKENS — dark is the default (projector), light via toggle (T)
+   ===================================================================== */
+:root {
+  color-scheme: dark;
+  --bg:        #0e0e10;
+  --surface:   #17171a;
+  --surface-2: #202024;
+  --line:      #2e2e33;
+  --axis:      #4a4a50;
+  --ink:       #ffffff;
+  --ink-2:     #c9c8c0;
+  --ink-3:     #8e8d87;
+  --accent:    #6da7ec;
+  --claim:     #f0a63a;
+  --claim-ink: #1a1203;
+  --key:       #ffd34d;
+  --shadow:    0 1.2vw 3vw rgba(0,0,0,.55);
+
+  /* tracks (validated: dark surface, adjacent CVD ΔE ≥ 8.4) */
+  --t-text:    #3987e5;
+  --t-coding:  #d95926;
+  --t-images:  #199e70;
+  --t-video:   #c98500;
+  --t-voice:   #d55181;
+  --t-science: #00a000;
+  --t-more:    #9085e9;
+
+  /* density bars: one hue, light→dark by count */
+  --d-1: #184f95; --d-2: #256abf; --d-3: #3987e5; --d-4: #6da7ec; --d-5: #9ec5f4;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:        #f6f6f3;
+  --surface:   #ffffff;
+  --surface-2: #efeee9;
+  --line:      #dddcd5;
+  --axis:      #9b9a93;
+  --ink:       #0b0b0b;
+  --ink-2:     #3d3c39;
+  --ink-3:     #6b6a65;
+  --accent:    #1c5cab;
+  --claim:     #b8650a;
+  --claim-ink: #ffffff;
+  --key:       #a67400;
+  --shadow:    0 1vw 2.5vw rgba(0,0,0,.14);
+
+  --t-text:    #2a78d6;
+  --t-coding:  #eb6834;
+  --t-images:  #1baf7a;
+  --t-video:   #eda100;
+  --t-voice:   #e87ba4;
+  --t-science: #008300;
+  --t-more:    #4a3aa7;
+
+  --d-1: #b7d3f6; --d-2: #86b6ef; --d-3: #3987e5; --d-4: #1c5cab; --d-5: #0d366b;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: clamp(13px, 1.1vw, 30px);
+  line-height: 1.35;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+
+/* =====================================================================
+   PAGE LAYOUT
+   ===================================================================== */
+#app {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+}
+
+/* ---------- top bar ---------- */
+#topbar {
+  display: flex; align-items: center; gap: 1.2em;
+  padding: .7em 1.4em;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+#brand { font-weight: 700; white-space: nowrap; color: var(--ink-2); }
+#filters { display: flex; flex-wrap: wrap; gap: .45em; flex: 1; min-width: 0; }
+.chip {
+  display: inline-flex; align-items: center; gap: .45em;
+  border: 1.5px solid var(--line); background: transparent;
+  border-radius: 999px; padding: .28em .8em; cursor: pointer;
+  font-size: .82em; color: var(--ink-2);
+  transition: background .15s, border-color .15s, color .15s, opacity .15s;
+}
+.chip:hover { border-color: var(--axis); }
+.chip .sw { width: .7em; height: .7em; border-radius: 50%; background: var(--c, var(--ink-3)); }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--c, var(--ink)); background: var(--surface-2); }
+.chip.off { opacity: .45; }
+#tools { display: flex; gap: .35em; }
+.tool {
+  min-width: 2.1em; height: 2.1em; padding: 0 .55em;
+  border: 1.5px solid var(--line); border-radius: .5em; background: transparent;
+  cursor: pointer; color: var(--ink-2); font-size: .9em;
+}
+.tool:hover { border-color: var(--axis); color: var(--ink); }
+
+/* ---------- intro block (collapses once the talk starts) ---------- */
+#intro {
+  overflow: hidden;
+  max-height: 30vh;
+  transition: max-height .45s ease, opacity .3s ease;
+  padding: 0 3vw;
+}
+#intro .inner { padding: 2.4vh 0 .6vh; }
+#intro h1 { margin: 0; font-size: 4.2vw; line-height: 1.05; letter-spacing: -.02em; }
+#intro p { margin: .5em 0 0; font-size: 1.6vw; color: var(--ink-2); }
+#intro .hint { font-size: 1vw; color: var(--ink-3); margin-top: 1.2em; }
+#intro kbd, .help kbd {
+  border: 1px solid var(--axis); border-bottom-width: 2px; border-radius: .3em;
+  padding: 0 .35em; font: inherit; font-size: .9em;
+}
+body.started #intro { max-height: 0; opacity: 0; }
+
+/* ---------- stage: card on top, timeline below ---------- */
+#stage {
+  position: relative; min-height: 0;
+  display: grid;
+  grid-template-rows: 0fr 1fr;
+  transition: grid-template-rows .4s ease;
+}
+body.card-open #stage { grid-template-rows: 1fr 27vh; }
+
+/* =====================================================================
+   TIMELINE
+   ===================================================================== */
+#tl {
+  position: relative; overflow: hidden; min-height: 0;
+  cursor: grab; touch-action: none; user-select: none;
+}
+#tl.dragging { cursor: grabbing; }
+#tl > .layer { position: absolute; inset: 0; pointer-events: none; }
+#tl .layer > * { pointer-events: auto; }
+
+.tick { position: absolute; width: 1px; background: var(--line); }
+.tick.major { background: var(--axis); }
+.year {
+  position: absolute; transform: translateX(-50%);
+  font-weight: 700; color: var(--ink-2); font-size: 1em; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.axisline { position: absolute; left: 0; right: 0; height: 2px; background: var(--axis); }
+
+.bar {
+  position: absolute; border-radius: 4px 4px 0 0;
+  transition: height .3s ease, top .3s ease, background-color .3s;
+}
+.barlabel {
+  position: absolute; transform: translateX(-50%);
+  font-size: .85em; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  transition: top .3s ease;
+}
+#densityCaption {
+  position: absolute; left: 1.2em; font-size: .78em; color: var(--ink-3);
+}
+
+.today-line {
+  position: absolute; width: 0; border-left: 2px dashed var(--accent);
+}
+.today-tag {
+  position: absolute; transform: translateX(-50%);
+  font-size: .8em; font-weight: 700; color: var(--accent); white-space: nowrap;
+  background: none; border: 0; cursor: pointer; padding: 0;
+}
+
+.dot {
+  position: absolute; width: .95em; height: .95em; margin: -.475em 0 0 -.475em;
+  border-radius: 50%; border: 2px solid var(--bg);
+  background: var(--c); cursor: pointer; padding: 0;
+  transition: opacity .25s, transform .15s;
+}
+.dot.key { width: 1.35em; height: 1.35em; margin: -.675em 0 0 -.675em; box-shadow: 0 0 0 2px var(--key); }
+.dot.claimed { box-shadow: 0 0 0 2px var(--claim); }
+.dot:hover, .dot:focus-visible { transform: scale(1.35); outline: none; z-index: 5; }
+.dot.current { transform: scale(1.3); z-index: 6; box-shadow: 0 0 0 3px var(--ink); }
+
+.stem { position: absolute; width: 1.5px; background: var(--c); opacity: .5; transition: opacity .25s; }
+
+.label {
+  position: absolute; width: var(--lw); text-align: left;
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: .3em solid var(--c);
+  border-radius: .45em; padding: .3em .55em .35em;
+  height: 3.85em; overflow: hidden; font-size: .9em;
+  cursor: pointer; transition: opacity .25s, border-color .15s, background .15s;
+  line-height: 1.2;
+}
+.label:hover, .label:focus-visible { background: var(--surface-2); outline: none; border-color: var(--axis); border-left-color: var(--c); }
+.label .meta { display: block; font-size: .72em; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label .meta b { color: var(--ink-2); font-weight: 600; }
+.label .ttl { display: block; font-size: .9em; font-weight: 600; color: var(--ink);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.label.key { border-color: color-mix(in srgb, var(--key) 55%, var(--line)); border-left-color: var(--c); }
+.label.key .ttl { font-size: .98em; font-weight: 750; }
+.label.key .star { color: var(--key); }
+.claim-pill {
+  display: inline-block; background: var(--claim); color: var(--claim-ink);
+  font-weight: 800; font-size: .78em; letter-spacing: .06em; border-radius: .3em;
+  padding: 0 .35em; margin-right: .3em; vertical-align: .08em;
+}
+.hidden { display: none !important; }
+.fade { opacity: 0; pointer-events: none !important; }
+
+#zoomHint {
+  position: absolute; left: 1.2em; top: .7em; font-size: .8em; color: var(--ink-3);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: .2em .8em;
+  transition: opacity .25s; pointer-events: none;
+}
+#tooltip {
+  position: fixed; z-index: 50; pointer-events: none;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: .4em;
+  padding: .35em .6em; font-size: .85em; box-shadow: var(--shadow); max-width: 24em;
+  opacity: 0; transition: opacity .12s;
+}
+#tooltip.show { opacity: 1; }
+
+/* =====================================================================
+   CARD
+   ===================================================================== */
+#cardWrap { position: relative; min-height: 0; overflow: hidden; }
+#card {
+  position: absolute; inset: 1.4vh 2vw 1vh;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 1vw;
+  box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 58% 42%;
+  overflow: hidden;
+  opacity: 0; transform: translateY(1.5vh); transition: opacity .25s ease, transform .25s ease;
+}
+body.card-open #card { opacity: 1; transform: none; }
+#card.swap { animation: swapIn .28s ease; }
+@keyframes swapIn { from { opacity: .0; transform: translateX(var(--dir, 2vw)); } to { opacity: 1; transform: none; } }
+
+#card .media {
+  position: relative; background: #000; min-height: 0; min-width: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+:root[data-theme="light"] #card .media { background: #1d1d1f; }
+#card .media > img, #card .media > video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+#card .media .credit {
+  position: absolute; left: .8em; bottom: .5em; font-size: .62em; color: #bbb;
+  background: rgba(0,0,0,.55); padding: .1em .45em; border-radius: .25em; max-width: 90%;
+}
+
+#card .text {
+  padding: 2.6vh 2.4vw 2vh; display: flex; flex-direction: column; min-height: 0; overflow: auto;
+}
+.c-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5em .8em; font-size: calc(1.05vw * var(--k, 1)); color: var(--ink-2); }
+.c-date { font-weight: 700; color: var(--ink); }
+.c-track { display: inline-flex; align-items: center; gap: .4em; }
+.c-track .sw { width: .8em; height: .8em; border-radius: 50%; background: var(--c); }
+.c-badge { font-size: .85em; font-weight: 700; border-radius: .3em; padding: .05em .45em; border: 1.5px solid var(--key); color: var(--key); }
+.c-claim {
+  margin-top: 1.4vh; align-self: flex-start;
+  background: var(--claim); color: var(--claim-ink); font-weight: 800; letter-spacing: .05em;
+  font-size: calc(1.05vw * var(--k, 1)); padding: .25em .7em; border-radius: .35em;
+}
+.c-title { margin: 1.3vh 0 0; font-size: calc(2.75vw * var(--k, 1)); line-height: 1.08; letter-spacing: -.015em; }
+.c-what { margin: 2.2vh 0 0; font-size: calc(1.5vw * var(--k, 1)); line-height: 1.32; color: var(--ink); }
+.c-why { margin: 2vh 0 0; font-size: calc(1.5vw * var(--k, 1)); line-height: 1.32; color: var(--ink-2); }
+.c-why b { color: var(--accent); font-weight: 700; }
+.c-note {
+  margin: 2vh 0 0; font-size: calc(1.02vw * var(--k, 1)); color: var(--ink-2);
+  border-left: .25em solid var(--claim); padding: .2em 0 .2em .7em;
+}
+.c-foot { margin-top: auto; padding-top: 1.5vh; display: flex; justify-content: space-between; align-items: flex-end; gap: 1em; }
+.c-source { font-size: .7vw; color: var(--ink-3); }
+.c-source a { color: var(--ink-3); }
+.c-step { font-size: .8vw; color: var(--ink-3); white-space: nowrap; }
+
+.c-close, .c-nav {
+  position: absolute; z-index: 4; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink-2); cursor: pointer; border-radius: 50%;
+  width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; font-size: 1.1vw;
+  display: flex; align-items: center; justify-content: center; opacity: .8;
+}
+.c-close:hover, .c-nav:hover { opacity: 1; color: var(--ink); }
+.c-close { top: .8vw; right: .8vw; }
+
+/* ---------- Today card ---------- */
+#card.today { grid-template-columns: 1fr; }
+.today-body { padding: 3vh 5vw; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+.today-body .kicker { font-size: 1.3vw; color: var(--accent); font-weight: 700; letter-spacing: .04em; }
+.today-body h2 { font-size: 3.6vw; margin: .5vh 0 0; line-height: 1.05; letter-spacing: -.02em; }
+.today-body .lead { font-size: 1.6vw; color: var(--ink-2); margin: 1.6vh 0 0; max-width: 60ch; }
+.stats { display: flex; gap: 4vw; margin-top: 3vh; }
+.stat .n { font-size: 4vw; font-weight: 800; line-height: 1; }
+.stat .l { font-size: 1.1vw; color: var(--ink-2); margin-top: .6vh; max-width: 16em; }
+.today-body .closing { font-size: 2.3vw; font-weight: 700; margin-top: 3.5vh; color: var(--accent); }
+
+/* ---------- media: placeholder ---------- */
+.ph {
+  width: 100%; height: 100%; min-height: 8em;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  gap: .6em; padding: 2em; color: #a9a8a2;
+  background: repeating-linear-gradient(45deg, #151517 0 14px, #19191c 14px 28px);
+  border: 2px dashed #3a3a40;
+}
+.ph .ph-icon { font-size: 2.4em; opacity: .7; }
+.ph .ph-file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; color: #d9d8d2; word-break: break-all; }
+.ph .ph-desc { font-size: .85em; max-width: 34em; }
+
+/* ---------- media: before/after slider ---------- */
+.ba { position: relative; width: 100%; height: 100%; cursor: ew-resize; touch-action: none; }
+.ba .pane { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.ba .pane img { width: 100%; height: 100%; object-fit: contain; }
+.ba .pane.before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.ba .pane.before img.pixel { image-rendering: pixelated; }
+.ba .pane.before .ph { padding-right: 52%; }
+.ba .pane.after .ph { padding-left: 52%; }
+.ba .handle { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 8px rgba(0,0,0,.6); pointer-events: none; }
+.ba .handle::after {
+  content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: #fff; color: #111; font-size: .8em; font-weight: 700; padding: .45em .6em; border-radius: 999px; white-space: nowrap;
+}
+.tag {
+  position: absolute; top: .7em; z-index: 3; background: rgba(0,0,0,.7); color: #fff;
+  font-weight: 800; padding: .15em .6em; border-radius: .3em; font-size: 1.1vw;
+}
+.ba .tag.l { left: .7em; } .ba .tag.r { right: .7em; }
+
+/* ---------- media: side by side ---------- */
+.sbs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; height: 100%; background: #000; }
+.sbs .cell { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; }
+.sbs .cell video, .sbs .cell img { width: 100%; height: 100%; object-fit: contain; }
+.sbs .tag { left: .7em; }
+
+/* ---------- media: sequence grid ---------- */
+.seq { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 3px; width: 100%; height: 100%; background: #000; }
+.seq .cell { position: relative; min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.seq .cell img { width: 100%; height: 100%; object-fit: cover; }
+.seq .tag { left: .4em; top: .4em; font-size: .8vw; }
+.seq .ph { padding: .6em; min-height: 0; font-size: .7em; }
+.seq .ph .ph-icon { font-size: 1.6em; }
+
+/* ---------- media: audio ---------- */
+.aud { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5em; padding: 2em; }
+.aud .wave { font-size: 5vw; opacity: .8; }
+.aud audio { width: 80%; }
+.aud .ph { height: auto; }
+
+.unmute {
+  position: absolute; right: .8em; top: .8em; z-index: 4; border: 0; cursor: pointer;
+  background: rgba(0,0,0,.72); color: #fff; padding: .35em .8em; border-radius: 999px; font-weight: 700; font-size: .95vw;
+}
+
+/* ---------- help + media status overlays ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+}
+.overlay .box {
+  background: var(--surface); border: 1px solid var(--line); border-radius: .8em; box-shadow: var(--shadow);
+  padding: 1.5em 2em; max-width: 70vw; max-height: 80vh; overflow: auto;
+}
+.overlay h3 { margin: 0 0 .8em; }
+.help table { border-collapse: collapse; }
+.help td { padding: .3em 1em .3em 0; vertical-align: top; }
+.help td:first-child { white-space: nowrap; }
+.mstat { font-size: .8em; }
+.mstat li { list-style: none; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.mstat ul { padding: 0; }
+.ok { color: #19a974; } .bad { color: #e5534b; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+@media (max-width: 800px) {
+  #brand { display: none; }
+  #card { grid-template-columns: 1fr; grid-template-rows: 45% 55%; inset: 1vh 16px; }
+  .c-title { font-size: 6vw; } .c-what, .c-why { font-size: 3.8vw; } .c-meta, .c-note { font-size: 3vw; } .c-source, .c-step { font-size: 2.6vw; }
+  #intro h1 { font-size: 8vw; } #intro p { font-size: 4vw; } #intro .hint { font-size: 3vw; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div id="brand">AI · 2014 → today</div>
+    <nav id="filters" aria-label="Filter by track"></nav>
+    <div id="tools">
+      <button class="tool" id="zoomOut" title="Zoom out (−)">−</button>
+      <button class="tool" id="zoomFit" title="Show everything (0)">Fit</button>
+      <button class="tool" id="zoomIn" title="Zoom in (+)">+</button>
+      <button class="tool" id="themeBtn" title="Light / dark (T)">☀</button>
+      <button class="tool" id="fsBtn" title="Fullscreen (F)">⛶</button>
+      <button class="tool" id="helpBtn" title="Shortcuts (?)">?</button>
+    </div>
+  </header>
+
+  <section id="intro"><div class="inner">
+    <h1 id="introTitle"></h1>
+    <p id="introSub"></p>
+    <div class="hint">Press <kbd>→</kbd> to walk through the key moments · click any milestone to open it · scroll to zoom</div>
+  </div></section>
+
+  <main id="stage">
+    <div id="cardWrap"><article id="card" aria-live="polite"></article></div>
+    <div id="tl" aria-label="Timeline">
+      <div class="layer" id="gridLayer"></div>
+      <div class="layer" id="densityLayer"></div>
+      <div class="layer" id="stemLayer"></div>
+      <div class="layer" id="labelLayer"></div>
+      <div class="layer" id="dotLayer"></div>
+      <div id="zoomHint"></div>
+    </div>
+  </main>
+</div>
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+/* =====================================================================
+   EDITABLE TEXT
+   ===================================================================== */
+const INTRO = {
+  title: "How far has AI come?",
+  sub:   "2014 → October 2026, in {N} milestones"
+};
+const TODAY = {
+  kicker:  "TODAY · OCTOBER 2026",
+  title:   "From blurry faces to a claimed million-dollar proof",
+  lead:    "Everything on this timeline happened in about twelve years, and most of it in the last two.",
+  closing: "So what does this mean for us?"     // ← the line that hands over to the rest of your talk
+};
+
+/* =====================================================================
+   TRACKS
+   ===================================================================== */
+const TRACKS = [
+  { id: "text",    name: "Text & chatbots", short: "Text" },
+  { id: "coding",  name: "Coding",          short: "Coding" },
+  { id: "images",  name: "Images",          short: "Images" },
+  { id: "video",   name: "Video",           short: "Video" },
+  { id: "voice",   name: "Voice & audio",   short: "Voice" },
+  { id: "science", name: "Science & math",  short: "Science" },
+  { id: "more",    name: "More",            short: "More" }
+];
+const TRACK = Object.fromEntries(TRACKS.map(t => [t.id, t]));
+
+/* =====================================================================
+   MILESTONES
+   tier 1 = key moment (clicker path, always labelled)
+   tier 2 = always on the timeline
+   tier 3 = appears when you zoom in
+   media types: image | video | audio | compare (slider|side) | sequence
+   optional  media.credit: "…"  shows a small attribution line on the media
+   ===================================================================== */
+const EVENTS = [
+{ id:"gan", date:"2014-06", track:"images", tier:1,
+  title:"AI draws its first faces",
+  what:"Researchers taught a computer to invent new pictures by pitting two programs against each other: one fakes, the other judges.",
+  why:"The results were tiny, grey and blurry, and that was the cutting edge. Drag the slider to see today.",
+  media:{ type:"compare", mode:"slider",
+    before:{ src:"media/2014-06_gan-faces-original-paper.png", label:"2014", pixel:true,
+      desc:"Real sample faces from Figure 2 of Goodfellow et al. (2014), the original GAN paper. Must be the real output, not a recreation." },
+    after:{ src:"media/2026_ai-portrait-today.jpg", label:"2026",
+      desc:"A photorealistic portrait generated with a current model (e.g. Midjourney V8 or Gemini). Your own render." } },
+  sources:[{ label:"arxiv.org: Goodfellow et al. 2014", url:"https://arxiv.org/abs/1406.2661" }] },
+
+{ id:"dqn", date:"2015-02", track:"more", tier:2,
+  title:"AI teaches itself Atari games",
+  what:"One program learned to play 49 classic Atari games using nothing but the screen and the score.",
+  why:"Nobody told it the rules. In Breakout it discovered by itself that tunnelling behind the wall wins faster.",
+  media:{ type:"video", src:"media/2015-02_deepmind-atari-breakout.mp4",
+    desc:"DeepMind's DQN agent playing Atari Breakout and digging the tunnel." },
+  sources:[{ label:"nature.com: Mnih et al. 2015", url:"https://www.nature.com/articles/nature14236" }] },
+
+{ id:"darpa", date:"2015-06", track:"more", tier:2,
+  title:"Rescue robots keep falling over",
+  what:"At a US government contest, the world's best robots tried to open doors, turn valves and climb stairs.",
+  why:"Many simply toppled over. This is where humanoid robots stood in 2015. Remember it for 2026.",
+  media:{ type:"video", src:"media/2015-06_darpa-robots-falling.mp4",
+    desc:"Compilation of robots falling at the DARPA Robotics Challenge Finals, June 2015." },
+  sources:[{ label:"Wikipedia: DARPA Robotics Challenge", url:"https://en.wikipedia.org/wiki/DARPA_Robotics_Challenge" }] },
+
+{ id:"alphago", date:"2016-03", track:"more", tier:1,
+  title:"AlphaGo beats Go champion Lee Sedol",
+  what:"Google DeepMind's AlphaGo beat Lee Sedol, one of the world's best players of the board game Go, by four games to one.",
+  why:"Go has more possible positions than there are atoms in the universe. Experts thought this was still a decade away.",
+  media:{ type:"image", src:"media/2016-03_alphago-lee-sedol-match.jpg",
+    desc:"Photo of the AlphaGo vs. Lee Sedol match in Seoul, March 2016." },
+  sources:[{ label:"Wikipedia: AlphaGo versus Lee Sedol", url:"https://en.wikipedia.org/wiki/AlphaGo_versus_Lee_Sedol" }] },
+
+{ id:"tay", date:"2016-03", track:"text", tier:2,
+  title:"Microsoft's chatbot lasts 16 hours",
+  what:"Microsoft launched Tay, a chatbot that learned from Twitter users, who quickly taught it to post offensive messages.",
+  why:"It was pulled offline within a day. Chatbots back then mostly parroted what they heard.",
+  media:{ type:"image", src:"media/2016-03_microsoft-tay-profile.png",
+    desc:"Screenshot of Tay's Twitter profile or a news headline about its shutdown (no offensive tweets)." },
+  sources:[{ label:"Wikipedia: Tay (chatbot)", url:"https://en.wikipedia.org/wiki/Tay_(chatbot)" }] },
+
+{ id:"wavenet", date:"2016-09", track:"voice", tier:2,
+  title:"Computer voices start sounding human",
+  what:"DeepMind's WaveNet created speech one tiny slice of sound at a time instead of gluing recorded snippets together.",
+  why:"In listening tests, people rated it far more natural than the robotic computer voices of the time.",
+  media:{ type:"audio", src:"media/2016-09_wavenet-speech-samples.mp3",
+    desc:"Old-style computer voice followed by a WaveNet sample, from DeepMind's WaveNet blog post." },
+  sources:[{ label:"deepmind.google: WaveNet", url:"https://deepmind.google/discover/blog/wavenet-a-generative-model-for-raw-audio/" }] },
+
+{ id:"msparity", date:"2016-10", track:"voice", tier:3,
+  title:"Speech recognition matches human typists",
+  what:"Microsoft's system transcribed recorded phone conversations about as accurately as professional transcribers.",
+  why:"Understanding messy, casual human speech had been a goal of computer science for decades.",
+  media:{ type:"image", src:"media/2016-10_microsoft-speech-parity.jpg",
+    desc:"Photo of the Microsoft research team, or a headline about reaching human parity." },
+  sources:[{ label:"blogs.microsoft.com", url:"https://blogs.microsoft.com/ai/historic-achievement-microsoft-researchers-reach-human-parity-conversational-speech-recognition/" }] },
+
+{ id:"libratus", date:"2017-01", track:"more", tier:3,
+  title:"AI beats poker professionals",
+  what:"Carnegie Mellon's Libratus beat four top professional poker players over 20 days and 120,000 hands.",
+  why:"Unlike chess, poker means hidden cards and bluffing. The AI had to win without knowing everything.",
+  media:{ type:"image", src:"media/2017-01_libratus-poker-match.jpg",
+    desc:"Photo from the 'Brains vs. AI' poker match in Pittsburgh, January 2017." },
+  sources:[{ label:"cmu.edu", url:"https://www.cmu.edu/news/stories/archives/2017/january/AI-beats-poker-pros.html" }] },
+
+{ id:"alphazero", date:"2017-12", track:"more", tier:2,
+  title:"AI masters chess in a day",
+  what:"AlphaZero was given only the rules of chess and learned by playing millions of games against itself.",
+  why:"Within 24 hours it was beating the world's strongest chess program, outdoing centuries of human chess knowledge.",
+  media:{ type:"image", src:"media/2017-12_alphazero-chess.jpg",
+    desc:"Chessboard from an AlphaZero game, or DeepMind's AlphaZero illustration." },
+  sources:[{ label:"arxiv.org: Silver et al. 2017", url:"https://arxiv.org/abs/1712.01815" }] },
+
+{ id:"duplex", date:"2018-05", track:"voice", tier:2,
+  title:"AI phones a hair salon",
+  what:"Google showed an assistant calling a real hair salon and booking an appointment, complete with “mm-hmm”s.",
+  why:"The person on the other end did not seem to notice they were talking to a machine.",
+  note:"Later reporting found that a share of real-world Duplex calls were placed or completed by human operators.",
+  media:{ type:"video", src:"media/2018-05_google-duplex-salon-call.mp4", sound:true,
+    desc:"The hair-salon call from the Google I/O 2018 keynote (audio with on-screen transcript)." },
+  sources:[{ label:"research.google: Google Duplex", url:"https://research.google/blog/google-duplex-an-ai-system-for-accomplishing-real-world-tasks-over-the-phone/" }] },
+
+{ id:"waymoone", date:"2018-12", track:"more", tier:3,
+  title:"Paying for a self-driving taxi",
+  what:"Waymo started charging riders for self-driving trips around Phoenix, at first with a safety driver on board.",
+  why:"Robotaxis moved from the test track to a service with paying customers.",
+  media:{ type:"image", src:"media/2018-12_waymo-one-phoenix.jpg",
+    desc:"Waymo One minivan in Phoenix, 2018 (Waymo press image)." },
+  sources:[{ label:"waymo.com", url:"https://waymo.com/blog/2018/12/waymo-one-next-step-on-our-self-driving/" }] },
+
+{ id:"gpt2", date:"2019-02", track:"text", tier:2,
+  title:"AI “too dangerous to release”",
+  what:"OpenAI held back the full version of its GPT-2 text generator, worried it could mass-produce fake news.",
+  why:"Its writing was fluent for its time but often drifted into nonsense. Today's chatbots are in a different league.",
+  media:{ type:"image", src:"media/2019-02_gpt2-unicorn-sample.png",
+    desc:"Screenshot of GPT-2's famous 'unicorns in the Andes' sample text from OpenAI's post." },
+  sources:[{ label:"openai.com: Better language models", url:"https://openai.com/index/better-language-models/" }] },
+
+{ id:"tpdne", date:"2019-02", track:"images", tier:2,
+  title:"Faces of people who don't exist",
+  what:"A website showed a brand-new, photo-quality face every time you refreshed it. None of these people are real.",
+  why:"Less than five years after the blurry 2014 faces, AI faces could pass for photographs.",
+  media:{ type:"image", src:"media/2019-02_stylegan-faces.jpg",
+    desc:"Grid of StyleGAN faces (from the StyleGAN paper / official repository)." },
+  sources:[{ label:"arxiv.org: StyleGAN (Karras et al.)", url:"https://arxiv.org/abs/1812.04948" },
+           { label:"thispersondoesnotexist.com", url:"https://thispersondoesnotexist.com/" }] },
+
+{ id:"openaifive", date:"2019-04", track:"more", tier:3,
+  title:"AI beats video-game world champions",
+  what:"OpenAI Five beat OG, the reigning world-champion team in the video game Dota 2.",
+  why:"The game demands real-time teamwork and long-term strategy among five players.",
+  media:{ type:"image", src:"media/2019-04_openai-five-vs-og.jpg",
+    desc:"Photo from the OpenAI Five Finals event, April 2019." },
+  sources:[{ label:"Wikipedia: OpenAI Five", url:"https://en.wikipedia.org/wiki/OpenAI_Five" }] },
+
+{ id:"rubiks", date:"2019-10", track:"more", tier:3,
+  title:"Robot hand solves a Rubik's Cube",
+  what:"OpenAI trained a human-like robot hand to solve a Rubik's Cube with one hand.",
+  why:"The hard part was the fingers, not the puzzle. It learned dexterity in simulation and kept going when researchers poked it.",
+  note:"The solving steps came from a standard algorithm. The AI learned the hand movements.",
+  media:{ type:"video", src:"media/2019-10_openai-robot-hand-rubiks-cube.mp4",
+    desc:"OpenAI's robot hand solving the cube (from OpenAI's 'Solving Rubik's Cube' post)." },
+  sources:[{ label:"openai.com: Solving Rubik's Cube", url:"https://openai.com/index/solving-rubiks-cube/" }] },
+
+{ id:"guardian", date:"2020-09", track:"text", tier:3,
+  title:"AI writes a newspaper column",
+  what:"The Guardian published an opinion piece by GPT-3: “A robot wrote this entire article. Are you scared yet, human?”",
+  why:"For many readers it was the first time AI produced paragraphs of convincing argument.",
+  note:"Editors assembled the piece from eight different AI outputs.",
+  media:{ type:"image", src:"media/2020-09_guardian-gpt3-article.png",
+    desc:"Screenshot of the Guardian article headline." },
+  sources:[{ label:"theguardian.com", url:"https://www.theguardian.com/commentisfree/2020/sep/08/robot-wrote-this-article-gpt-3" }] },
+
+{ id:"alphafold", date:"2020-11", track:"science", tier:2,
+  title:"AlphaFold cracks protein folding",
+  what:"DeepMind's AlphaFold predicted the 3D shapes of proteins, the tiny machines in every living cell, about as accurately as lab experiments.",
+  why:"Working out a single protein's shape could take a scientist years. This was a 50-year-old challenge in biology.",
+  media:{ type:"video", src:"media/2020-11_alphafold-protein-prediction.mp4",
+    desc:"DeepMind's animation of a predicted protein structure overlaid on the experimental one." },
+  sources:[{ label:"deepmind.google: AlphaFold", url:"https://deepmind.google/discover/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology/" }] },
+
+{ id:"dalle", date:"2021-01", track:"images", tier:3,
+  title:"An armchair shaped like an avocado",
+  what:"OpenAI's DALL·E turned short text descriptions into pictures, such as “an armchair in the shape of an avocado”.",
+  why:"For the first time you could type an idea and get an image, even if it looked like clip art.",
+  media:{ type:"image", src:"media/2021-01_dalle-avocado-armchair.jpg",
+    desc:"The avocado-armchair examples from OpenAI's original DALL·E post." },
+  sources:[{ label:"openai.com: DALL·E", url:"https://openai.com/index/dall-e/" }] },
+
+{ id:"copilot", date:"2021-06", track:"coding", tier:2,
+  title:"AI starts finishing programmers' code",
+  what:"GitHub Copilot began suggesting whole lines of code while programmers typed.",
+  why:"It was like the autocomplete on your phone, but for software.",
+  media:{ type:"video", src:"media/2021-06_github-copilot-demo.mp4",
+    desc:"Short screen recording of Copilot suggesting code (GitHub's 2021 demo, or your own)." },
+  sources:[{ label:"github.blog", url:"https://github.blog/news-insights/product-news/introducing-github-copilot-ai-pair-programmer/" }] },
+
+{ id:"alphacode", date:"2022-02", track:"coding", tier:2,
+  title:"AI enters programming contests",
+  what:"DeepMind's AlphaCode solved contest puzzles at about the level of an average human competitor.",
+  why:"That's average among people who solve hard puzzles for fun. Watch what happens by September 2025.",
+  media:{ type:"image", src:"media/2022-02_alphacode-contest.png",
+    desc:"A contest problem with AlphaCode's solution (from DeepMind's AlphaCode post)." },
+  sources:[{ label:"deepmind.google: AlphaCode", url:"https://deepmind.google/discover/blog/competitive-programming-with-alphacode/" }] },
+
+{ id:"dalle2", date:"2022-04", track:"images", tier:3,
+  title:"Realistic pictures from a sentence",
+  what:"OpenAI's DALL·E 2 produced sharp, realistic images from a typed description.",
+  why:"Fifteen months after the avocado chair, the clip-art look was gone.",
+  media:{ type:"image", src:"media/2022-04_dalle2-astronaut-horse.jpg",
+    desc:"'An astronaut riding a horse in photorealistic style', an official DALL·E 2 launch example." },
+  sources:[{ label:"openai.com: DALL·E 2", url:"https://openai.com/index/dall-e-2/" }] },
+
+{ id:"afdb", date:"2022-07", track:"science", tier:3,
+  title:"200 million protein shapes, free",
+  what:"DeepMind and EMBL released predicted shapes for over 200 million proteins, nearly every one known to science.",
+  why:"It works like a free search engine for protein shapes, used by researchers worldwide.",
+  media:{ type:"image", src:"media/2022-07_alphafold-database.jpg",
+    desc:"Image from DeepMind's 'protein universe' announcement." },
+  sources:[{ label:"deepmind.google", url:"https://deepmind.google/discover/blog/alphafold-reveals-the-structure-of-the-protein-universe/" }] },
+
+{ id:"artprize", date:"2022-08", track:"images", tier:2,
+  title:"AI artwork wins an art prize",
+  what:"Jason Allen won the digital art category at the Colorado State Fair with an image made using Midjourney.",
+  why:"He used over 600 prompts plus some retouching, and the judges didn't know the tool was AI.",
+  media:{ type:"image", src:"media/2022-08_theatre-dopera-spatial.jpg",
+    desc:"The winning image 'Théâtre D'opéra Spatial' by Jason M. Allen." },
+  sources:[{ label:"Wikipedia: Théâtre D'opéra Spatial", url:"https://en.wikipedia.org/wiki/Th%C3%A9%C3%A2tre_D%27op%C3%A9ra_Spatial" }] },
+
+{ id:"chatgpt", date:"2022-11", track:"text", tier:1,
+  title:"ChatGPT launches",
+  what:"OpenAI released a free chatbot that anyone could talk to in plain language.",
+  why:"One million users in five days and an estimated 100 million within two months. At the time, the fastest-growing app ever.",
+  media:{ type:"image", src:"media/2022-11_chatgpt-launch-interface.png",
+    desc:"Screenshot of the original ChatGPT interface from late 2022 (e.g. via the Internet Archive)." },
+  sources:[{ label:"openai.com: Introducing ChatGPT", url:"https://openai.com/index/chatgpt/" }] },
+
+{ id:"gpt4", date:"2023-03", track:"text", tier:2,
+  title:"GPT-4 passes the bar exam",
+  what:"OpenAI's GPT-4 scored around the top 10% on a simulated bar exam for lawyers, according to OpenAI.",
+  why:"The previous model had scored around the bottom 10% on the same test.",
+  note:"An independent 2024 study argued that the real percentile was lower.",
+  media:{ type:"image", src:"media/2023-03_gpt4-exam-results-chart.png",
+    desc:"The exam-results chart from OpenAI's GPT-4 announcement." },
+  sources:[{ label:"openai.com: GPT-4", url:"https://openai.com/index/gpt-4-research/" }] },
+
+{ id:"pope", date:"2023-03", track:"images", tier:2,
+  title:"The Pope's fake puffer jacket",
+  what:"An AI image of Pope Francis in a white designer puffer coat spread across the internet.",
+  why:"Millions believed it was a real photo, a first for an AI image.",
+  media:{ type:"image", src:"media/2023-03_pope-puffer-jacket-ai.jpg",
+    desc:"The Midjourney image of the Pope in a puffer coat (show it labelled 'AI-generated')." },
+  sources:[{ label:"theverge.com", url:"https://www.theverge.com/2023/3/27/23657927/ai-pope-image-fake-midjourney-computer-generated-aesthetic" }] },
+
+{ id:"spaghetti", date:"2023-03", track:"video", tier:2,
+  title:"Will Smith eats spaghetti",
+  what:"A Reddit user posted an AI-generated clip of Will Smith eating spaghetti, made with a free research model.",
+  why:"Warped faces and melting pasta: this was the state of AI video. Hold that thought until 2025.",
+  media:{ type:"video", src:"media/2023-03_will-smith-spaghetti-original.mp4",
+    desc:"The original March 2023 clip (ModelScope text-to-video), posted on r/StableDiffusion." },
+  sources:[{ label:"Wikipedia: Will Smith Eating Spaghetti test", url:"https://en.wikipedia.org/wiki/Will_Smith_Eating_Spaghetti_test" }] },
+
+{ id:"drake", date:"2023-04", track:"voice", tier:2,
+  title:"Fake Drake song goes viral",
+  what:"“Heart on My Sleeve” used AI copies of Drake's and The Weeknd's voices and racked up millions of plays before being taken down.",
+  why:"The two stars never sang it, and many listeners couldn't tell.",
+  media:{ type:"image", src:"media/2023-04_heart-on-my-sleeve-news.jpg",
+    desc:"News headline or screenshot about the song (no audio, for copyright reasons)." },
+  sources:[{ label:"Wikipedia: Heart on My Sleeve", url:"https://en.wikipedia.org/wiki/Heart_on_My_Sleeve_(Ghostwriter977_song)" }] },
+
+{ id:"waymosf", date:"2023-08", track:"more", tier:2,
+  title:"Driverless taxis approved in San Francisco",
+  what:"California allowed Waymo to run paid rides around the clock in San Francisco, with nobody in the driver's seat.",
+  why:"Self-driving cars stopped being a demo and became something you hail with an app.",
+  note:"By early 2026, Waymo said it was giving roughly 400,000 paid rides a week (company figure).",
+  media:{ type:"video", src:"media/2023-08_waymo-empty-driver-seat.mp4",
+    desc:"Footage of a Waymo driving through San Francisco with an empty driver's seat." },
+  sources:[{ label:"cpuc.ca.gov", url:"https://www.cpuc.ca.gov/news-and-updates/all-news/cpuc-approves-permits-for-cruise-and-waymo-to-charge-fares-for-passenger-service-in-sf-2023" }] },
+
+{ id:"biden", date:"2024-01", track:"voice", tier:3,
+  title:"Fake Biden voice calls voters",
+  what:"Before a US primary election, robocalls using an AI clone of President Biden's voice told voters to stay home.",
+  why:"Within weeks, the US telecoms regulator made AI-voiced robocalls illegal. Cloning a voice had become that easy.",
+  media:{ type:"image", src:"media/2024-01_fcc-ai-robocall-ruling.png",
+    desc:"Headline about the New Hampshire robocall or the FCC ruling (Feb 2024)." },
+  sources:[{ label:"fcc.gov", url:"https://www.fcc.gov/document/fcc-makes-ai-generated-voices-robocalls-illegal" }] },
+
+{ id:"sora", date:"2024-02", track:"video", tier:2,
+  title:"A minute of realistic AI video",
+  what:"OpenAI showed Sora, which made clips up to a minute long, like a woman walking down a rainy Tokyo street.",
+  why:"Less than a year after the spaghetti clip.",
+  media:{ type:"video", src:"media/2024-02_sora-tokyo-street.mp4",
+    desc:"The 'Tokyo street' sample from OpenAI's Sora announcement." },
+  sources:[{ label:"openai.com: Sora", url:"https://openai.com/index/sora/" }] },
+
+{ id:"gpt4o", date:"2024-05", track:"voice", tier:1,
+  title:"Talking with AI like a person",
+  what:"OpenAI's GPT-4o held live spoken conversations: you could interrupt it, and it laughed, whispered and sang.",
+  why:"It answered about as fast as a person does in conversation, like the film “Her” come to life.",
+  media:{ type:"video", src:"media/2024-05_gpt4o-voice-demo.mp4", sound:true,
+    desc:"A short clip from OpenAI's GPT-4o launch demos (e.g. real-time conversation or singing)." },
+  sources:[{ label:"openai.com: Hello GPT-4o", url:"https://openai.com/index/hello-gpt-4o/" }] },
+
+{ id:"alphaproof", date:"2024-07", track:"science", tier:3,
+  title:"Silver medal at the Math Olympiad",
+  what:"Google DeepMind's AI solved 4 of 6 problems from the International Mathematical Olympiad, the top contest for high-school students.",
+  why:"That's silver-medal level, though it needed up to three days on some problems, and humans had to translate the questions for it.",
+  media:{ type:"image", src:"media/2024-07_alphaproof-imo-silver.png",
+    desc:"Score chart from DeepMind's AlphaProof post." },
+  sources:[{ label:"deepmind.google: AlphaProof", url:"https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/" }] },
+
+{ id:"o1", date:"2024-09", track:"text", tier:2,
+  title:"AI that thinks before answering",
+  what:"OpenAI's o1 took time to “think” through a problem step by step before replying.",
+  why:"On a qualifying exam for the US Math Olympiad it jumped from 13% to 83% correct, compared with the previous model.",
+  media:{ type:"image", src:"media/2024-09_openai-o1-math-chart.png",
+    desc:"The AIME comparison chart from OpenAI's 'Learning to reason' post." },
+  sources:[{ label:"openai.com: Learning to reason", url:"https://openai.com/index/learning-to-reason-with-llms/" }] },
+
+{ id:"nobel", date:"2024-10", track:"science", tier:1,
+  title:"AI wins a Nobel Prize",
+  what:"The Chemistry Nobel went to Demis Hassabis and John Jumper of Google DeepMind for AlphaFold, shared with David Baker.",
+  why:"It went from computer experiment to science's highest honour in four years. The day before, the Physics prize went to AI pioneers Geoffrey Hinton and John Hopfield.",
+  media:{ type:"image", src:"media/2024-10_nobel-chemistry-announcement.jpg",
+    desc:"The Nobel Prize in Chemistry 2024 announcement graphic or laureate photo." },
+  sources:[{ label:"nobelprize.org: Chemistry 2024", url:"https://www.nobelprize.org/prizes/chemistry/2024/press-release/" }] },
+
+{ id:"computeruse", date:"2024-10", track:"more", tier:3,
+  title:"AI learns to use a computer",
+  what:"Anthropic released a version of Claude that could operate a computer like a person: look at the screen, move the mouse, click and type.",
+  why:"AI could now do tasks in ordinary software, not just chat about them.",
+  media:{ type:"video", src:"media/2024-10_claude-computer-use-demo.mp4",
+    desc:"Clip from Anthropic's computer-use demo video, October 2024." },
+  sources:[{ label:"anthropic.com", url:"https://www.anthropic.com/news/3-5-models-and-computer-use" }] },
+
+{ id:"deepseek", date:"2025-01", track:"text", tier:2,
+  title:"Chinese AI shakes Wall Street",
+  what:"Chinese startup DeepSeek released R1, a free model that rivalled the best American ones, and its app shot to No. 1 in the US App Store.",
+  why:"Chipmaker Nvidia lost about $590 billion in value in a single day, the biggest one-day drop in US stock-market history.",
+  media:{ type:"image", src:"media/2025-01_nvidia-stock-drop-chart.png",
+    desc:"Chart of Nvidia's share price on 27 Jan 2025 (make your own from public price data)." },
+  sources:[{ label:"cnbc.com", url:"https://www.cnbc.com/2025/01/27/nvidia-sheds-almost-600-billion-in-market-cap-biggest-drop-ever.html" }] },
+
+{ id:"vibe", date:"2025-02", track:"coding", tier:1,
+  title:"Building apps without knowing code",
+  what:"People started building working apps just by describing what they wanted to an AI. Researcher Andrej Karpathy called it “vibe coding”.",
+  why:"Making software stopped requiring knowing how to program, and Collins Dictionary made “vibe coding” its Word of the Year.",
+  media:{ type:"video", src:"media/2025-02_vibe-coding-demo.mp4",
+    desc:"Your own screen recording: type one sentence describing an app, and a working app appears (sped up)." },
+  sources:[{ label:"Wikipedia: Vibe coding", url:"https://en.wikipedia.org/wiki/Vibe_coding" }] },
+
+{ id:"ghibli", date:"2025-03", track:"images", tier:2,
+  title:"The internet turns into Ghibli",
+  what:"ChatGPT's new image tool set off a worldwide craze of turning photos into Studio Ghibli-style pictures.",
+  why:"Sam Altman said ChatGPT gained a million users in an hour, and that “our GPUs are melting”.",
+  media:{ type:"compare", mode:"slider",
+    before:{ src:"media/2025-03_ghibli-original-photo.jpg", label:"Photo",
+      desc:"A photo you took yourself (e.g. of you or your team)." },
+    after:{ src:"media/2025-03_ghibli-style-version.jpg", label:"AI",
+      desc:"The same photo converted to Ghibli style with ChatGPT. Your own output." } },
+  sources:[{ label:"openai.com: 4o image generation", url:"https://openai.com/index/introducing-4o-image-generation/" }] },
+
+{ id:"alphaevolve", date:"2025-05", track:"science", tier:2,
+  title:"AI improves a 1969 math recipe",
+  what:"DeepMind's AlphaEvolve found a faster way to multiply one kind of small grid of numbers, beating a method that had stood since 1969.",
+  why:"The same system found tweaks that freed up about 0.7% of Google's worldwide computing power.",
+  media:{ type:"image", src:"media/2025-05_alphaevolve-diagram.png",
+    desc:"Diagram from DeepMind's AlphaEvolve post." },
+  sources:[{ label:"deepmind.google: AlphaEvolve", url:"https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/" }] },
+
+{ id:"veo3", date:"2025-05", track:"video", tier:1,
+  title:"AI video learns to talk",
+  what:"Google's Veo 3 created realistic video with matching dialogue, music and sound effects from a text prompt.",
+  why:"Two years after the melting spaghetti. Compare for yourself.",
+  media:{ type:"compare", mode:"side",
+    before:{ src:"media/2023-03_will-smith-spaghetti-original.mp4", label:"2023", kind:"video",
+      desc:"The original March 2023 spaghetti clip (same file as the 2023 milestone)." },
+    after:{ src:"media/2025-05_veo3-spaghetti-with-sound.mp4", label:"2025", kind:"video", sound:true,
+      desc:"A spaghetti-eating clip made with Veo 3 (or Veo 3.1), with sound. Your own generation, or a properly credited one." } },
+  sources:[{ label:"deepmind.google: Veo", url:"https://deepmind.google/models/veo/" }] },
+
+{ id:"imo", date:"2025-07", track:"science", tier:1,
+  title:"Gold medal at the Math Olympiad",
+  what:"AI systems from Google DeepMind and OpenAI each solved 5 of 6 problems at the International Mathematical Olympiad, which is gold-medal level.",
+  why:"One year after silver, they worked in plain language within the same 4.5-hour limits as the teenage contestants.",
+  note:"Google DeepMind's result was graded by the official IMO coordinators. OpenAI's was graded by former medallists.",
+  media:{ type:"image", src:"media/2025-07_imo-gold-ai.jpg",
+    desc:"Image from DeepMind's IMO gold announcement, or an IMO 2025 photo." },
+  sources:[{ label:"deepmind.google: IMO gold", url:"https://deepmind.google/discover/blog/advanced-version-of-gemini-with-deep-think-officially-achieves-gold-medal-standard-at-the-international-mathematical-olympiad/" }] },
+
+{ id:"atcoder", date:"2025-07", track:"coding", tier:3,
+  title:"A human beats AI, barely",
+  what:"Polish programmer Przemysław “Psyho” Dębiak won a 10-hour world-final coding contest in Tokyo. An OpenAI model came second.",
+  why:"He won by about 9.5% and posted: “Humanity has prevailed (for now!)”.",
+  media:{ type:"image", src:"media/2025-07_atcoder-final-scoreboard.png",
+    desc:"Final scoreboard of the AtCoder World Tour Finals 2025 Heuristic." },
+  sources:[{ label:"euronews.com", url:"https://euronews.com/next/2025/07/22/humanity-has-won-so-far-meet-the-worlds-best-programmer-who-beat-ai-and-chatgpt" }] },
+
+{ id:"gpt5", date:"2025-08", track:"text", tier:3,
+  title:"Top AI model, free for everyone",
+  what:"OpenAI made GPT-5 the default model in ChatGPT, including for free users.",
+  why:"OpenAI said ChatGPT was approaching 700 million weekly users, roughly one in twelve people on Earth.",
+  media:{ type:"image", src:"media/2025-08_gpt5-launch.png",
+    desc:"Screenshot from OpenAI's GPT-5 announcement." },
+  sources:[{ label:"openai.com: Introducing GPT-5", url:"https://openai.com/index/introducing-gpt-5/" }] },
+
+{ id:"icpc", date:"2025-09", track:"coding", tier:2,
+  title:"AI tops the coding world finals",
+  what:"At the world finals of the top university programming contest (ICPC), OpenAI's system solved all 12 problems and Google's solved 10.",
+  why:"No human team solved all 12, just three and a half years after AlphaCode was merely “average”.",
+  media:{ type:"image", src:"media/2025-09_icpc-world-finals-results.png",
+    desc:"Results graphic from DeepMind's ICPC post." },
+  sources:[{ label:"deepmind.google: ICPC", url:"https://deepmind.google/discover/blog/gemini-achieves-gold-level-performance-at-the-international-collegiate-programming-contest-world-finals/" }] },
+
+{ id:"sora2", date:"2025-09", track:"video", tier:3,
+  title:"AI video app tops the charts",
+  what:"OpenAI released Sora 2 with a TikTok-style app where anyone can make videos with sound, including of themselves.",
+  why:"It shot to No. 1 on Apple's US App Store within days.",
+  media:{ type:"video", src:"media/2025-09_sora2-sample.mp4", sound:true,
+    desc:"An official Sora 2 sample clip from OpenAI's announcement." },
+  sources:[{ label:"openai.com: Sora 2", url:"https://openai.com/index/sora-2/" }] },
+
+{ id:"breakingrust", date:"2025-11", track:"voice", tier:2,
+  title:"AI singer tops a Billboard chart",
+  what:"“Walk My Walk” by the AI act Breaking Rust reached No. 1 on Billboard's Country Digital Song Sales chart.",
+  why:"It was the first time an AI-made song topped any Billboard chart.",
+  note:"It's a downloads chart, and about 3,000 downloads were enough.",
+  media:{ type:"image", src:"media/2025-11_billboard-breaking-rust.png",
+    desc:"Screenshot of the chart or of a news headline." },
+  sources:[{ label:"billboard.com", url:"https://www.billboard.com/pro/ai-music-artists-charts-popular/" }] },
+
+{ id:"erdos728", date:"2026-01", track:"science", tier:2,
+  title:"AI cracks an Erdős problem",
+  what:"GPT-5.2 Pro solved Erdős problem #728, one of hundreds of open questions left by the famous mathematician Paul Erdős, and a computer checked the proof.",
+  why:"Within months, AI had helped settle around 100 Erdős problems, many by finding forgotten solutions in old papers.",
+  note:"Terence Tao called problems like this the “lowest hanging fruit”.",
+  media:{ type:"image", src:"media/2026-01_erdos-problems-site.png",
+    desc:"Screenshot of erdosproblems.com showing problem #728 as solved." },
+  sources:[{ label:"arxiv.org: Erdős #728 write-up", url:"https://arxiv.org/abs/2601.07421" },
+           { label:"quantamagazine.org", url:"https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai-20260803/" }] },
+
+{ id:"openclaw", date:"2026-01", track:"more", tier:2,
+  title:"AI agents get a social network",
+  what:"OpenClaw, a free AI assistant that can act on your computer, went viral, and users' bots flocked to Moltbook, a Reddit-style site for AI agents.",
+  why:"Over a million AI agents posted, commented and voted while humans could only watch.",
+  note:"Many viral posts were steered by humans, and both projects had serious security problems.",
+  media:{ type:"image", src:"media/2026-01_moltbook-screenshot.png",
+    desc:"Screenshot of the Moltbook front page." },
+  sources:[{ label:"Wikipedia: OpenClaw", url:"https://en.wikipedia.org/wiki/OpenClaw" }] },
+
+{ id:"compiler", date:"2026-02", track:"coding", tier:2,
+  title:"AI team builds a compiler",
+  what:"Sixteen Claude agents worked together for two weeks and wrote a C compiler (the program that turns code into software) that can build Linux.",
+  why:"Around 100,000 lines of code for about $20,000, a job that normally takes expert teams much longer.",
+  media:{ type:"image", src:"media/2026-02_claude-c-compiler.png",
+    desc:"Screenshot from Anthropic's engineering post." },
+  sources:[{ label:"anthropic.com: Building a C compiler", url:"https://www.anthropic.com/engineering/building-c-compiler" }] },
+
+{ id:"seedance", date:"2026-02", track:"video", tier:2,
+  title:"Fake Cruise vs. Pitt alarms Hollywood",
+  what:"A 15-second AI fight scene between “Tom Cruise” and “Brad Pitt”, made with ByteDance's Seedance 2.0 from a two-line prompt, went viral.",
+  why:"Disney, Paramount and Netflix sent legal threats within days. A Deadpool screenwriter wrote: “It's likely over for us.”",
+  media:{ type:"image", src:"media/2026-02_seedance-hollywood-headline.png",
+    desc:"News headline about the clip and Hollywood's reaction (not the clip itself)." },
+  sources:[{ label:"Wikipedia: Seedance 2.0", url:"https://en.wikipedia.org/wiki/Seedance_2.0" }] },
+
+{ id:"firstproof", date:"2026-02", track:"science", tier:3,
+  title:"Mathematicians set AI a real test",
+  what:"Eleven leading mathematicians, including a Fields Medal winner, challenged AI with ten unpublished research problems.",
+  why:"AI solved several but came nowhere near all ten. On this test, humans were still ahead.",
+  media:{ type:"image", src:"media/2026-02_first-proof-challenge.png",
+    desc:"Screenshot of the First Proof website or the Scientific American article." },
+  sources:[{ label:"scientificamerican.com", url:"https://www.scientificamerican.com/article/first-proof-is-ais-toughest-math-test-yet-the-results-are-mixed" }] },
+
+{ id:"mjv8", date:"2026-03", track:"images", tier:2,
+  title:"Same prompt, eight versions later",
+  what:"Midjourney released version 8 of its image generator, four years after version 1.",
+  why:"The same prompt run through every version shows how quickly the pictures improved.",
+  media:{ type:"sequence", desc:"One identical prompt rendered with each Midjourney version (--v 1 … --v 8). Real outputs only.",
+    items:[
+      { src:"media/mj-compare_v1.png", label:"V1 · Feb 2022" },
+      { src:"media/mj-compare_v2.png", label:"V2 · Apr 2022" },
+      { src:"media/mj-compare_v3.png", label:"V3 · Jul 2022" },
+      { src:"media/mj-compare_v4.png", label:"V4 · Nov 2022" },
+      { src:"media/mj-compare_v5.png", label:"V5 · Mar 2023" },
+      { src:"media/mj-compare_v6.png", label:"V6 · Dec 2023" },
+      { src:"media/mj-compare_v7.png", label:"V7 · Apr 2025" },
+      { src:"media/mj-compare_v8.png", label:"V8 · Mar 2026" } ] },
+  sources:[{ label:"midjourney.com: V8 alpha", url:"https://updates.midjourney.com/v8-alpha/" }] },
+
+{ id:"marathon", date:"2026-04", track:"more", tier:1,
+  title:"Robot beats human half-marathon record",
+  what:"In Beijing, a humanoid robot ran a half marathon in 50 minutes 26 seconds, finding its own way round the course.",
+  why:"That's faster than the human world record of about 57 minutes. A year earlier, the winning robot needed 2 hours 40 minutes.",
+  note:"The robots ran their own course, so it isn't an official record.",
+  media:{ type:"compare", mode:"side",
+    before:{ src:"media/2015-06_darpa-robots-falling.mp4", label:"2015", kind:"video",
+      desc:"The DARPA 2015 falling-robots clip (same file as the 2015 milestone)." },
+    after:{ src:"media/2026-04_beijing-robot-half-marathon.mp4", label:"2026", kind:"video",
+      desc:"Footage of the winning robot at the 2026 Beijing E-Town humanoid half marathon." } },
+  sources:[{ label:"english.beijing.gov.cn", url:"https://english.beijing.gov.cn/latest/news/202604/t20260419_4593508.html" }] },
+
+{ id:"unitdist", date:"2026-05", track:"science", tier:2,
+  title:"AI disproves an 80-year-old conjecture",
+  what:"An OpenAI model found a counterexample to Erdős's 1946 “unit distance” conjecture, a famous question about dots on a flat surface.",
+  why:"Leading mathematicians checked it, and Quanta Magazine called it the first historically significant proof to come from an AI.",
+  media:{ type:"image", src:"media/2026-05_unit-distance-diagram.png",
+    desc:"A simple diagram explaining the unit distance problem (points with equal-length connections)." },
+  sources:[{ label:"cdn.openai.com: human-verified write-up", url:"https://cdn.openai.com/pdf/74c24085-19b0-4534-9c90-465b8e29ad73/unit-distance-remarks.pdf" },
+           { label:"quantamagazine.org", url:"https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai-20260803/" }] },
+
+{ id:"navier", date:"2026-09", track:"science", tier:1, claimed:true,
+  title:"$1 million math problem settled?",
+  what:"OpenAI announced that about 10,000 AI agents, working for 88 hours, had produced a computer-checked proof about the Navier–Stokes equations, which describe how fluids flow.",
+  why:"It's one of the seven “Millennium Prize Problems”, each with a $1 million reward. If confirmed, AI will have cracked one of the hardest problems in mathematics.",
+  note:"Not yet verified. It covers only fluids pushed by an outside force, the Clay Institute will decide only after peer review, and human researchers dispute the credit.",
+  media:{ type:"image", src:"media/2026-09_fluid-vortex-visualization.jpg",
+    desc:"A fluid / vortex visualization (e.g. a public-domain NASA image of swirling flow)." },
+  sources:[{ label:"openai.com: Navier–Stokes", url:"https://openai.com/index/navier-stokes-solution/" },
+           { label:"science.org", url:"https://www.science.org/content/article/how-ai-math-breakthrough-ignited-controversy" }] }
+];
+
+/* =====================================================================
+   DERIVED DATA
+   ===================================================================== */
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON = MONTHS.map(m => m.slice(0,3));
+EVENTS.forEach((e, i) => {
+  const [y, m] = e.date.split("-").map(Number);
+  e.y = y; e.m = m; e.t = y + (m - 1) / 12 + 0.5 / 12; e.order = i;
+  e.long = `${MONTHS[m-1]} ${y}`; e.short = `${MON[m-1]} ${y}`;
+});
+EVENTS.sort((a, b) => a.t - b.t || a.order - b.order);
+const BY_ID = Object.fromEntries(EVENTS.map(e => [e.id, e]));
+const TODAY_T = 2026 + 9 / 12 + 0.25 / 12;        // early October 2026
+const FIRST_YEAR = 2014, LAST_YEAR = 2026;
+const DOMAIN = { start: 2013.82, end: 2027.05 };
+const MIN_SPAN = 1.0;
+const TIER3_SPAN = 8.5;                           // tier-3 milestones appear when fewer years than this are on screen
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const S = {
+  filter: new Set(TRACKS.map(t => t.id)),
+  view: { ...DOMAIN },
+  pos: -1,          // index in key path; -1 = intro; keys.length = Today
+  openId: null,     // id of the open card, "today", or null
+  started: false
+};
+const $ = s => document.querySelector(s);
+const tl = $("#tl");
+const cssVar = (el, name) => getComputedStyle(el).getPropertyValue(name).trim();
+const trackColor = id => `var(--t-${id})`;
+
+function inFilter(e) { return S.filter.has(e.track); }
+function keyPath() { return EVENTS.filter(e => e.tier === 1 && inFilter(e)); }
+
+/* =====================================================================
+   FILTER CHIPS
+   ===================================================================== */
+function buildFilters() {
+  const nav = $("#filters");
+  const all = document.createElement("button");
+  all.className = "chip"; all.id = "chipAll"; all.textContent = "All";
+  all.addEventListener("click", () => { TRACKS.forEach(t => S.filter.add(t.id)); filtersChanged(); });
+  nav.appendChild(all);
+  TRACKS.forEach(t => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.dataset.track = t.id; b.style.setProperty("--c", trackColor(t.id));
+    b.innerHTML = `<span class="sw"></span>${t.name}`;
+    b.addEventListener("click", () => {
+      const allOn = S.filter.size === TRACKS.length;
+      if (allOn) { S.filter.clear(); S.filter.add(t.id); }
+      else if (S.filter.has(t.id)) { S.filter.delete(t.id); if (!S.filter.size) TRACKS.forEach(x => S.filter.add(x.id)); }
+      else S.filter.add(t.id);
+      filtersChanged();
+    });
+    nav.appendChild(b);
+  });
+  syncChips();
+}
+function syncChips() {
+  const allOn = S.filter.size === TRACKS.length;
+  $("#chipAll").setAttribute("aria-pressed", allOn);
+  document.querySelectorAll("#filters .chip[data-track]").forEach(b => {
+    const on = S.filter.has(b.dataset.track);
+    b.setAttribute("aria-pressed", !allOn && on);
+    b.classList.toggle("off", !allOn && !on);
+  });
+}
+function filtersChanged() {
+  syncChips();
+  if (S.openId && S.openId !== "today" && !inFilter(BY_ID[S.openId])) closeCard();
+  layout();
+}
+
+/* =====================================================================
+   TIMELINE DOM
+   ===================================================================== */
+const els = {};
+function buildTimeline() {
+  EVENTS.forEach(e => {
+    const c = trackColor(e.track);
+    const dot = document.createElement("button");
+    dot.className = "dot" + (e.tier === 1 ? " key" : "") + (e.claimed ? " claimed" : "");
+    dot.style.setProperty("--c", c);
+    dot.setAttribute("aria-label", `${e.short}: ${e.title}`);
+    dot.addEventListener("click", ev => { if (!suppressClick) openEvent(e.id); });
+    dot.addEventListener("pointerenter", ev => showTip(ev, e));
+    dot.addEventListener("pointerleave", hideTip);
+
+    const lab = document.createElement("button");
+    lab.className = "label" + (e.tier === 1 ? " key" : "");
+    lab.style.setProperty("--c", c);
+    lab.innerHTML =
+      `<span class="meta"><b>${e.short}</b> · ${TRACK[e.track].short}</span>` +
+      `<span class="ttl">${e.claimed ? '<span class="claim-pill">CLAIMED</span>' : ""}${e.tier === 1 ? '<span class="star">★ </span>' : ""}${esc(e.title)}</span>`;
+    lab.addEventListener("click", () => { if (!suppressClick) openEvent(e.id); });
+
+    const stem = document.createElement("div");
+    stem.className = "stem"; stem.style.setProperty("--c", c);
+
+    $("#dotLayer").appendChild(dot); $("#labelLayer").appendChild(lab); $("#stemLayer").appendChild(stem);
+    els[e.id] = { dot, lab, stem };
+  });
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[ch])); }
+
+/* =====================================================================
+   LAYOUT  (runs on every zoom / pan / resize / filter change)
+   ===================================================================== */
+let lastMetrics = null;
+function layout() {
+  const W = tl.clientWidth, H = tl.clientHeight;
+  if (!W || !H) return;
+  const em = parseFloat(getComputedStyle(tl).fontSize);
+  const compact = document.body.classList.contains("card-open");
+  const pad = 2.2 * em;
+  const span = S.view.end - S.view.start;
+  const X = t => pad + (t - S.view.start) / span * (W - 2 * pad);
+  const pxYear = (W - 2 * pad) / span;
+
+  // vertical zones (bottom → top): density bars, year labels, axis, dots, labels
+  const densH = compact ? Math.max(28, H * .26) : Math.min(H * .2, 9 * em);
+  const showMonths = pxYear > 22 * em;
+  const yearH = (showMonths ? 2.6 : 1.6) * em;
+  const axisY = H - densH - yearH - .4 * em;
+  const dotStep = 1.15 * em, maxLevels = compact ? 3 : 5;
+
+  // ---- grid: year ticks, labels, axis, today line
+  const grid = $("#gridLayer"); grid.innerHTML = "";
+  const axis = document.createElement("div"); axis.className = "axisline"; axis.style.top = axisY + "px"; grid.appendChild(axis);
+  for (let y = FIRST_YEAR; y <= LAST_YEAR + 1; y++) {
+    const x = X(y);
+    if (x < -50 || x > W + 50) continue;
+    const tk = document.createElement("div"); tk.className = "tick major";
+    tk.style.cssText = `left:${x}px;top:${axisY - (compact ? 6 * em : H)}px;height:${compact ? 6 * em : H}px;opacity:.35`;
+    grid.appendChild(tk);
+    if (y <= LAST_YEAR) {
+      const lbl = document.createElement("div"); lbl.className = "year";
+      const cx = y === LAST_YEAR ? (X(y) + X(TODAY_T)) / 2 : X(y + .5);
+      lbl.style.left = cx + "px"; lbl.style.top = (axisY + (showMonths ? 1.45 : compact ? .75 : .45) * em) + "px";
+      lbl.textContent = y;
+      if (pxYear < 2.6 * em) lbl.textContent = "’" + String(y).slice(2);
+      grid.appendChild(lbl);
+    }
+  }
+  if (pxYear > 9 * em) {            // month ticks when zoomed in
+    for (let y = FIRST_YEAR; y <= LAST_YEAR; y++) for (let m = 1; m < 13; m++) {
+      if (y === LAST_YEAR && m > 10) continue;
+      const x = X(y + m / 12); if (x < -200 || x > W + 200) continue;
+      const tk = document.createElement("div"); tk.className = "tick";
+      if (m < 12) grid.appendChild(tk);
+      tk.style.cssText = `left:${x}px;top:${axisY}px;height:${.45 * em}px`;
+      if (showMonths) {
+        const ml = document.createElement("div"); ml.className = "year";
+        ml.style.cssText = `left:${X(y + (m - .5) / 12)}px;top:${axisY + .35 * em}px;font-weight:400;font-size:.72em;color:var(--ink-3)`;
+        ml.textContent = MON[m - 1]; grid.appendChild(ml);
+      }
+    }
+  }
+  const tx = X(TODAY_T);
+  const tline = document.createElement("div"); tline.className = "today-line";
+  tline.style.cssText = `left:${tx}px;top:${compact ? axisY - 5 * em : 1.8 * em}px;height:${compact ? 5 * em : axisY - 1.8 * em}px`;
+  grid.appendChild(tline);
+  const ttag = document.createElement("button"); ttag.className = "today-tag"; ttag.textContent = "Today";
+  ttag.style.cssText = `left:${tx}px;top:${compact ? axisY - 6.2 * em : .3 * em}px`;
+  ttag.addEventListener("click", () => { if (!suppressClick) openToday(); });
+  grid.appendChild(ttag);
+
+  // ---- density bars (milestones per year, current filter, all tiers)
+  const dens = $("#densityLayer"); dens.innerHTML = "";
+  const counts = {};
+  for (let y = FIRST_YEAR; y <= LAST_YEAR; y++) counts[y] = 0;
+  EVENTS.forEach(e => { if (inFilter(e)) counts[e.y]++; });
+  const max = Math.max(1, ...Object.values(counts));
+  const barTop0 = H - densH + (compact ? .2 * em : 1.3 * em), barMaxH = H - barTop0 - .5 * em;
+  for (let y = FIRST_YEAR; y <= LAST_YEAR; y++) {
+    const x0 = X(y), x1 = y === LAST_YEAR ? X(TODAY_T) : X(y + 1);
+    if (x1 < 0 || x0 > W) continue;
+    const w = Math.min(7 * em, Math.max(3, (x1 - x0) * .72)), cx = (x0 + x1) / 2;
+    const h = counts[y] ? Math.max(4, barMaxH * counts[y] / max) : 0;
+    const bar = document.createElement("div"); bar.className = "bar";
+    const lvl = Math.min(5, 1 + Math.floor(counts[y] / max * 4.999));
+    bar.style.cssText = `left:${cx - w / 2}px;width:${w}px;top:${H - .5 * em - h}px;height:${h}px;background:var(--d-${lvl})`;
+    bar.title = `${y}${y === LAST_YEAR ? " (Jan–Oct)" : ""}: ${counts[y]} milestone${counts[y] === 1 ? "" : "s"}`;
+    dens.appendChild(bar);
+    if (!compact) {
+      const bl = document.createElement("div"); bl.className = "barlabel";
+      bl.style.left = cx + "px"; bl.style.top = (H - .5 * em - h - 1.25 * em) + "px";
+      bl.textContent = counts[y] ? counts[y] : "";
+      dens.appendChild(bl);
+    }
+  }
+  if (!compact) {
+    const cap = document.createElement("div"); cap.id = "densityCaption";
+    cap.style.top = (H - densH + .1 * em) + "px";
+    cap.textContent = "Milestones per year (2026: January–October)";
+    dens.appendChild(cap);
+  }
+
+  // ---- which events are visible
+  const showTier3 = span <= TIER3_SPAN;
+  let hiddenByZoom = 0;
+  const vis = [];
+  EVENTS.forEach(e => {
+    const el = els[e.id];
+    const on = inFilter(e) && (e.tier < 3 || showTier3);
+    if (inFilter(e) && e.tier === 3 && !showTier3) hiddenByZoom++;
+    e._x = X(e.t);
+    const inView = e._x > -40 && e._x < W + 40;
+    el.dot.classList.toggle("fade", !on);
+    el.dot.classList.toggle("hidden", !inView);
+    el.dot.classList.toggle("current", S.openId === e.id);
+    el.dot.tabIndex = on ? 0 : -1;
+    if (on && inView) vis.push(e);
+  });
+  const hint = $("#zoomHint");
+  hint.textContent = hiddenByZoom ? `+${hiddenByZoom} more milestones: zoom in to see them` : "";
+  hint.style.opacity = hiddenByZoom && !compact ? 1 : 0;
+
+  // ---- dots: stack upward when they would overlap
+  const levelsLastX = [];
+  vis.forEach(e => {
+    let lv = 0;
+    while (lv < maxLevels - 1 && levelsLastX[lv] !== undefined && e._x - levelsLastX[lv] < dotStep) lv++;
+    levelsLastX[lv] = e._x;
+    e._dotY = axisY - lv * dotStep;
+    const d = els[e.id].dot;
+    d.style.left = e._x + "px"; d.style.top = e._dotY + "px";
+  });
+  EVENTS.forEach(e => { if (!vis.includes(e)) { const d = els[e.id].dot; d.style.left = e._x + "px"; d.style.top = axisY + "px"; } });
+
+  // ---- labels: greedy lanes, key moments first
+  const dotsTop = axisY - (maxLevels - .3) * dotStep;
+  const labelTop = 2.4 * em, laneH = 3.8 * em;
+  const lanes = compact ? 0 : Math.max(0, Math.floor((dotsTop - labelTop) / laneH));
+  const keyW = Math.min(14 * em, Math.max(9.6 * em, pxYear * 1.1));
+  const normW = Math.min(12 * em, Math.max(8.8 * em, pxYear * .9));
+  const occupied = Array.from({ length: lanes }, () => []);
+  const placed = new Set();
+  const free = (ln, a, b) => occupied[ln].every(([p, q]) => b <= p || a >= q);
+  const candidates = e => {
+    const w = e.tier === 1 ? keyW : normW;
+    // right of the dot first, then left of it; lowest lane first
+    const anchors = [e._x - .5 * em, e._x - w + .5 * em]
+      .map(l => Math.min(Math.max(.3 * em, l), W - w - .3 * em));
+    const out = [];
+    for (let ln = 0; ln < lanes; ln++) for (const left of anchors)
+      out.push({ e, ln, left, w, a: left - .3 * em, b: left + w + .3 * em });
+    return out;
+  };
+  const commit = c => {
+    occupied[c.ln].push([c.a, c.b]);
+    c.e._lab = { left: c.left, w: c.w, top: dotsTop - (c.ln + 1) * laneH };
+    placed.add(c.e.id);
+  };
+  if (lanes) {
+    // key moments: small search so that as many as possible (ideally all) get a label
+    const keys = vis.filter(e => e.tier === 1).sort((a, b) => a.t - b.t);
+    const cands = keys.map(candidates);
+    let best = [], bestN = -1, iters = 0;
+    const cur = [];
+    const dfs = (i, n) => {
+      if (++iters > 40000 || bestN === keys.length) return;
+      if (n + (keys.length - i) <= bestN) return;
+      if (i === keys.length) { bestN = n; best = cur.slice(); return; }
+      for (const c of cands[i]) {
+        if (!free(c.ln, c.a, c.b)) continue;
+        occupied[c.ln].push([c.a, c.b]); cur.push(c);
+        dfs(i + 1, n + 1);
+        cur.pop(); occupied[c.ln].pop();
+        if (bestN === keys.length) return;
+      }
+      dfs(i + 1, n);
+    };
+    dfs(0, 0);
+    best.forEach(commit);
+    // everything else: greedy, in date order, tier 2 before tier 3
+    vis.filter(e => e.tier !== 1).sort((a, b) => a.tier - b.tier || a.t - b.t).forEach(e => {
+      const c = candidates(e).find(c => free(c.ln, c.a, c.b));
+      if (c) commit(c);
+    });
+  }
+  EVENTS.forEach(e => {
+    const { lab, stem } = els[e.id];
+    if (placed.has(e.id)) {
+      const L = e._lab;
+      lab.classList.remove("hidden", "fade");
+      lab.style.setProperty("--lw", L.w + "px");
+      lab.style.left = L.left + "px"; lab.style.top = L.top + "px";
+      lab.tabIndex = 0;
+      const bottom = L.top + 3.85 * .9 * em;
+      stem.classList.remove("hidden");
+      stem.style.left = (e._x - .75) + "px"; stem.style.top = bottom + "px";
+      stem.style.height = Math.max(0, e._dotY - bottom) + "px";
+    } else {
+      lab.classList.add("hidden"); lab.tabIndex = -1;
+      stem.classList.add("hidden");
+    }
+  });
+  lastMetrics = { W, pad, span };
+}
+
+/* =====================================================================
+   ZOOM & PAN
+   ===================================================================== */
+function clampView(v) {
+  let span = Math.min(DOMAIN.end - DOMAIN.start, Math.max(MIN_SPAN, v.end - v.start));
+  let start = Math.min(Math.max(v.start, DOMAIN.start), DOMAIN.end - span);
+  return { start, end: start + span };
+}
+function timeAtX(px) {
+  const { W, pad, span } = lastMetrics;
+  return S.view.start + (px - pad) / (W - 2 * pad) * span;
+}
+function zoomAround(t, factor) {
+  const v = S.view;
+  const span = (v.end - v.start) * factor;
+  const ratio = (t - v.start) / (v.end - v.start);
+  S.view = clampView({ start: t - ratio * span, end: t - ratio * span + span });
+  layout();
+}
+let anim = null;
+function animateView(target, ms = 380) {
+  target = clampView(target);
+  const from = { ...S.view }, t0 = performance.now();
+  if (anim) cancelAnimationFrame(anim);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) ms = 0;
+  const step = now => {
+    const k = ms ? Math.min(1, (now - t0) / ms) : 1, ease = 1 - Math.pow(1 - k, 3);
+    S.view = { start: from.start + (target.start - from.start) * ease, end: from.end + (target.end - from.end) * ease };
+    layout();
+    if (k < 1) anim = requestAnimationFrame(step); else anim = null;
+  };
+  anim = requestAnimationFrame(step);
+}
+function zoomBy(f) {
+  const c = (S.view.start + S.view.end) / 2, span = (S.view.end - S.view.start) * f;
+  animateView({ start: c - span / 2, end: c + span / 2 });
+}
+function zoomFit() { animateView({ ...DOMAIN }); }
+function ensureVisible(t) {
+  const span = S.view.end - S.view.start, m = span * .08;
+  if (t < S.view.start + m || t > S.view.end - m) animateView({ start: t - span / 2, end: t + span / 2 });
+}
+
+tl.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  if (!lastMetrics) return;
+  const r = tl.getBoundingClientRect();
+  if (Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) {          // horizontal trackpad scroll = pan
+    const dt = ev.deltaX / (r.width) * (S.view.end - S.view.start);
+    S.view = clampView({ start: S.view.start + dt, end: S.view.end + dt }); layout(); return;
+  }
+  const scale = ev.deltaMode === 1 ? 0.05 : 0.0018;
+  zoomAround(timeAtX(ev.clientX - r.left), Math.exp(ev.deltaY * scale));
+}, { passive: false });
+
+let drag = null, suppressClick = false;
+tl.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0) return;
+  drag = { x: ev.clientX, start: { ...S.view }, moved: false, id: ev.pointerId };
+});
+window.addEventListener("pointermove", ev => {
+  if (!drag || ev.pointerId !== drag.id) return;
+  const dx = ev.clientX - drag.x;
+  if (!drag.moved && Math.abs(dx) < 5) return;
+  if (!drag.moved) { drag.moved = true; tl.classList.add("dragging"); hideTip(); }
+  const { W, pad } = lastMetrics;
+  const dt = -dx / (W - 2 * pad) * (drag.start.end - drag.start.start);
+  S.view = clampView({ start: drag.start.start + dt, end: drag.start.end + dt });
+  layout();
+});
+window.addEventListener("pointerup", ev => {
+  if (!drag) return;
+  if (drag.moved) { suppressClick = true; setTimeout(() => suppressClick = false, 0); }
+  tl.classList.remove("dragging"); drag = null;
+});
+
+/* ---------- tooltip on dots ---------- */
+const tip = $("#tooltip");
+function showTip(ev, e) {
+  if (drag && drag.moved) return;
+  tip.innerHTML = `<b>${e.short}</b> · ${TRACK[e.track].name}${e.claimed ? " · <b style='color:var(--claim)'>CLAIMED</b>" : ""}<br>${esc(e.title)}`;
+  const r = ev.target.getBoundingClientRect();
+  tip.style.left = Math.min(innerWidth - 300, Math.max(8, r.left - 20)) + "px";
+  tip.style.top = (r.top - 70) + "px";
+  tip.classList.add("show");
+}
+function hideTip() { tip.classList.remove("show"); }
+
+/* =====================================================================
+   CARD
+   ===================================================================== */
+const card = $("#card");
+function stopMedia() { card.querySelectorAll("video,audio").forEach(m => { try { m.pause(); } catch (_) {} }); }
+
+function setOpen(open) {
+  document.body.classList.toggle("card-open", open);
+  // keep the timeline laid out while the grid rows animate
+  const t0 = performance.now();
+  const tick = now => { layout(); if (now - t0 < 450) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function start() {
+  if (!S.started) { S.started = true; document.body.classList.add("started"); }
+}
+
+function openEvent(id, dir = 1) {
+  const e = BY_ID[id]; if (!e) return;
+  start(); hideTip();
+  const wasOpen = !!S.openId;
+  stopMedia();
+  S.openId = id;
+  const keys = keyPath();
+  const ki = keys.indexOf(e);
+  if (ki >= 0) S.pos = ki;
+  else S.pos = keys.filter(k => k.t <= e.t).length - 1;   // non-key card: → continues from here
+  card.className = "";
+  card.innerHTML = "";
+  card.appendChild(renderMedia(e));
+  card.appendChild(renderText(e, ki, keys.length));
+  addCardButtons();
+  if (wasOpen) { card.style.setProperty("--dir", (dir > 0 ? 2 : -2) + "vw"); void card.offsetWidth; card.classList.add("swap"); }
+  setOpen(true);
+  fitCardText();
+  ensureVisible(e.t);
+}
+
+// shrink the card text until it fits (long entries on short screens)
+function fitCardText() {
+  const t = card.querySelector(".text"); if (!t) return;
+  const run = () => {
+    let k = 1; t.style.setProperty("--k", k);
+    while (t.scrollHeight > t.clientHeight + 1 && k > .66) { k -= .04; t.style.setProperty("--k", k.toFixed(2)); }
+  };
+  run(); setTimeout(run, 460);              // again once the layout transition has settled
+}
+window.addEventListener("resize", () => { if (S.openId && S.openId !== "today") fitCardText(); });
+
+function openToday() {
+  start(); hideTip();
+  const wasOpen = !!S.openId;
+  stopMedia();
+  S.openId = "today";
+  S.pos = keyPath().length;
+  const n = EVENTS.length;
+  const recent = EVENTS.filter(e => e.y >= 2025).length;
+  const months = Math.round((TODAY_T - 2025) * 12);
+  const years = Math.round(TODAY_T - EVENTS[0].t);
+  card.className = "today";
+  card.innerHTML = `
+    <div class="today-body">
+      <div class="kicker">${esc(TODAY.kicker)}</div>
+      <h2>${esc(TODAY.title)}</h2>
+      <p class="lead">${esc(TODAY.lead)}</p>
+      <div class="stats">
+        <div class="stat"><div class="n">${years}</div><div class="l">years from the first blurry AI faces to today</div></div>
+        <div class="stat"><div class="n">${n}</div><div class="l">milestones on this timeline</div></div>
+        <div class="stat"><div class="n">${recent}</div><div class="l">of them in just the last ${months} months</div></div>
+      </div>
+      <div class="closing">${esc(TODAY.closing)}</div>
+    </div>`;
+  addCardButtons();
+  if (wasOpen) { card.style.setProperty("--dir", "2vw"); void card.offsetWidth; card.classList.add("swap"); }
+  setOpen(true);
+  ensureVisible(TODAY_T);
+}
+
+function closeCard() {
+  stopMedia();
+  S.openId = null;
+  setOpen(false);
+}
+
+function addCardButtons() {
+  const x = document.createElement("button");
+  x.className = "c-close"; x.innerHTML = "✕"; x.title = "Close (Esc)";
+  x.addEventListener("click", closeCard);
+  card.appendChild(x);
+}
+
+function renderText(e, ki, kn) {
+  const t = document.createElement("div"); t.className = "text";
+  const src = (e.sources || []).map(s => `<a href="${s.url}" target="_blank" rel="noopener">${esc(s.label)} ↗</a>`).join(" · ");
+  t.innerHTML = `
+    <div class="c-meta" style="--c:${trackColor(e.track)}">
+      <span class="c-date">${e.long}</span>
+      <span class="c-track"><span class="sw"></span>${TRACK[e.track].name}</span>
+      ${e.tier === 1 ? '<span class="c-badge">★ Key moment</span>' : ""}
+    </div>
+    ${e.claimed ? '<div class="c-claim">CLAIMED · NOT YET VERIFIED</div>' : ""}
+    <h2 class="c-title">${esc(e.title)}</h2>
+    <p class="c-what">${esc(e.what)}</p>
+    <p class="c-why"><b>Why it's impressive:</b> ${esc(e.why)}</p>
+    ${e.note ? `<p class="c-note">${esc(e.note)}</p>` : ""}
+    <div class="c-foot">
+      <div class="c-source">Source: ${src}</div>
+      <div class="c-step">${ki >= 0 ? `Key moment ${ki + 1} / ${kn}` : ""}</div>
+    </div>`;
+  return t;
+}
+
+/* ---------- media ---------- */
+function placeholder(src, desc, kind) {
+  const d = document.createElement("div"); d.className = "ph";
+  const icon = kind === "video" ? "🎬" : kind === "audio" ? "🔊" : "🖼";
+  const why = kind === "image" ? "" : `<div class="ph-desc" style="opacity:.7">(missing, or a format this browser can't play: use MP4 with H.264${kind === "audio" ? " / MP3" : ""})</div>`;
+  d.innerHTML = `<div class="ph-icon">${icon}</div><div class="ph-file">${esc(src)}</div>${desc ? `<div class="ph-desc">${esc(desc)}</div>` : ""}${why}`;
+  return d;
+}
+function kindOf(src) { return /\.(mp4|webm|mov|m4v)$/i.test(src) ? "video" : /\.(mp3|wav|m4a|ogg)$/i.test(src) ? "audio" : "image"; }
+
+function mediaEl(src, desc, opts = {}) {
+  const kind = opts.kind || kindOf(src);
+  let el;
+  if (kind === "video") {
+    el = document.createElement("video");
+    el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true; el.controls = true; el.preload = "auto";
+    el.src = src;
+  } else {
+    el = document.createElement("img"); el.alt = desc || ""; el.decoding = "async"; el.src = src;
+    if (opts.pixel) el.classList.add("pixel");
+  }
+  el.addEventListener("error", () => { if (el.isConnected) el.replaceWith(placeholder(src, desc, kind)); }, { once: true });
+  return el;
+}
+function unmuteButton(container, getVideo) {
+  const b = document.createElement("button"); b.className = "unmute"; b.textContent = "🔊 Sound on";
+  b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const v = getVideo(); if (!v || v.tagName !== "VIDEO") return;
+    v.muted = !v.muted; if (!v.muted) { v.currentTime = 0; v.play(); }
+    b.textContent = v.muted ? "🔊 Sound on" : "🔇 Mute";
+  });
+  container.appendChild(b);
+}
+
+function renderMedia(e) {
+  const box = document.createElement("div"); box.className = "media";
+  const m = e.media;
+  if (!m) { box.appendChild(placeholder("(no media)", "", "image")); return box; }
+
+  if (m.type === "image" || m.type === "video") {
+    const el = mediaEl(m.src, m.desc, { kind: m.type });
+    box.appendChild(el);
+    if (m.type === "video" && m.sound) unmuteButton(box, () => box.querySelector("video"));
+  }
+  else if (m.type === "audio") {
+    const wrap = document.createElement("div"); wrap.className = "aud";
+    const au = document.createElement("audio"); au.controls = true; au.preload = "auto"; au.src = m.src;
+    wrap.innerHTML = `<div class="wave">🔊</div>`;
+    wrap.appendChild(au);
+    au.addEventListener("error", () => { wrap.innerHTML = ""; wrap.appendChild(placeholder(m.src, m.desc, "audio")); }, { once: true });
+    box.appendChild(wrap);
+  }
+  else if (m.type === "compare" && m.mode === "slider") {
+    const ba = document.createElement("div"); ba.className = "ba"; ba.style.setProperty("--pos", "50%");
+    const after = document.createElement("div"); after.className = "pane after";
+    after.appendChild(mediaEl(m.after.src, m.after.desc, { kind: "image" }));
+    const before = document.createElement("div"); before.className = "pane before";
+    before.style.background = "#000";
+    before.appendChild(mediaEl(m.before.src, m.before.desc, { kind: "image", pixel: m.before.pixel }));
+    const handle = document.createElement("div"); handle.className = "handle";
+    ba.append(after, before, handle);
+    ba.insertAdjacentHTML("beforeend", `<span class="tag l">${esc(m.before.label)}</span><span class="tag r">${esc(m.after.label)}</span>`);
+    let active = false;
+    const setPos = cx => { const r = ba.getBoundingClientRect(); ba.style.setProperty("--pos", Math.max(0, Math.min(100, (cx - r.left) / r.width * 100)) + "%"); };
+    ba.addEventListener("pointerdown", ev => { active = true; ba.setPointerCapture(ev.pointerId); setPos(ev.clientX); });
+    ba.addEventListener("pointermove", ev => { if (active) setPos(ev.clientX); });
+    ba.addEventListener("pointerup", () => active = false);
+    box.appendChild(ba);
+  }
+  else if (m.type === "compare") {                 // side by side (videos)
+    const sbs = document.createElement("div"); sbs.className = "sbs";
+    [m.before, m.after].forEach(side => {
+      const cell = document.createElement("div"); cell.className = "cell";
+      cell.appendChild(mediaEl(side.src, side.desc, { kind: side.kind }));
+      cell.insertAdjacentHTML("beforeend", `<span class="tag">${esc(side.label)}</span>`);
+      if (side.sound) unmuteButton(cell, () => cell.querySelector("video"));
+      sbs.appendChild(cell);
+    });
+    box.appendChild(sbs);
+  }
+  else if (m.type === "sequence") {
+    const g = document.createElement("div"); g.className = "seq";
+    m.items.forEach(it => {
+      const cell = document.createElement("div"); cell.className = "cell";
+      cell.appendChild(mediaEl(it.src, "", { kind: "image" }));
+      cell.insertAdjacentHTML("beforeend", `<span class="tag">${esc(it.label)}</span>`);
+      g.appendChild(cell);
+    });
+    box.appendChild(g);
+  }
+  if (m.credit) box.insertAdjacentHTML("beforeend", `<div class="credit">${esc(m.credit)}</div>`);
+  return box;
+}
+
+/* =====================================================================
+   KEY-MOMENT NAVIGATION (clicker: → ← PageDown PageUp)
+   ===================================================================== */
+function next() {
+  const keys = keyPath();
+  if (S.openId === "today") return;
+  const n = S.pos + 1;
+  if (n < keys.length) openEvent(keys[n].id, 1);
+  else openToday();
+}
+function prev() {
+  const keys = keyPath();
+  if (S.openId === "today") { if (keys.length) openEvent(keys[keys.length - 1].id, -1); return; }
+  const cur = S.openId ? BY_ID[S.openId] : null;
+  // from a non-key card, ← goes to the key moment at or before it
+  let p = cur && cur.tier !== 1 ? S.pos : S.pos - 1;
+  if (p >= 0) openEvent(keys[p].id, -1);
+  else goHome();
+}
+function goHome() {
+  closeCard(); S.pos = -1; S.started = false;
+  document.body.classList.remove("started");
+  zoomFit();
+}
+
+/* =====================================================================
+   KEYBOARD
+   ===================================================================== */
+document.addEventListener("keydown", ev => {
+  if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
+  const k = ev.key;
+  if (overlayOpen()) { if (k === "Escape" || k === "?" || k === "m" || k === "M") { closeOverlay(); ev.preventDefault(); } return; }
+  switch (k) {
+    case "ArrowRight": case "PageDown": ev.preventDefault(); next(); break;
+    case "ArrowLeft":  case "PageUp":   ev.preventDefault(); prev(); break;
+    case "Escape": if (S.openId) closeCard(); break;
+    case "Home": ev.preventDefault(); goHome(); break;
+    case "End": ev.preventDefault(); openToday(); break;
+    case "+": case "=": zoomBy(1 / 1.6); break;
+    case "-": case "_": zoomBy(1.6); break;
+    case "0": zoomFit(); break;
+    case "t": case "T": toggleTheme(); break;
+    case "f": case "F": toggleFullscreen(); break;
+    case "?": showHelp(); break;
+    case "m": case "M": showMediaStatus(); break;
+  }
+});
+
+/* =====================================================================
+   THEME, FULLSCREEN, OVERLAYS
+   ===================================================================== */
+function toggleTheme() {
+  const now = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = now;
+  syncThemeBtn();
+  try { localStorage.setItem("ai-timeline-theme", now); } catch (_) {}
+}
+try { const t = localStorage.getItem("ai-timeline-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (_) {}
+function syncThemeBtn() { $("#themeBtn").textContent = document.documentElement.dataset.theme === "light" ? "☾" : "☀"; }
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+  else document.exitFullscreen?.();
+}
+let overlay = null;
+function overlayOpen() { return !!overlay; }
+function closeOverlay() { overlay?.remove(); overlay = null; }
+function openOverlay(html, cls) {
+  closeOverlay();
+  overlay = document.createElement("div"); overlay.className = "overlay";
+  overlay.innerHTML = `<div class="box ${cls}">${html}</div>`;
+  overlay.addEventListener("click", ev => { if (ev.target === overlay) closeOverlay(); });
+  document.body.appendChild(overlay);
+}
+function showHelp() {
+  openOverlay(`<h3>Shortcuts</h3><table>
+    <tr><td><kbd>→</kbd> <kbd>PageDown</kbd></td><td>Next key moment (then the Today card)</td></tr>
+    <tr><td><kbd>←</kbd> <kbd>PageUp</kbd></td><td>Previous key moment</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Close the card</td></tr>
+    <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Back to the start / jump to Today</td></tr>
+    <tr><td>Scroll, <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></td><td>Zoom in / out / show everything (more milestones appear as you zoom in)</td></tr>
+    <tr><td>Drag</td><td>Move along the timeline</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Light / dark mode</td></tr>
+    <tr><td><kbd>F</kbd></td><td>Fullscreen</td></tr>
+    <tr><td><kbd>M</kbd></td><td>Check which media files are missing</td></tr>
+  </table>`, "help");
+}
+function allMediaPaths() {
+  const out = [];
+  EVENTS.forEach(e => {
+    const m = e.media; if (!m) return;
+    const add = (src, desc) => { if (!out.find(o => o.src === src)) out.push({ src, desc, ev: e }); };
+    if (m.src) add(m.src, m.desc);
+    if (m.before) add(m.before.src, m.before.desc);
+    if (m.after) add(m.after.src, m.after.desc);
+    if (m.items) m.items.forEach(i => add(i.src, m.desc));
+  });
+  return out;
+}
+function probe(src) {
+  return new Promise(res => {
+    const kind = kindOf(src);
+    const el = kind === "image" ? new Image() : document.createElement(kind);
+    const done = ok => { res(ok); if (kind !== "image") el.removeAttribute("src"); };
+    if (kind === "image") { el.onload = () => done(true); el.onerror = () => done(false); }
+    else { el.preload = "metadata"; el.onloadedmetadata = () => done(true); el.onerror = () => done(false); }
+    el.src = src;
+    setTimeout(() => res(false), 6000);
+  });
+}
+async function showMediaStatus() {
+  const list = allMediaPaths();
+  openOverlay(`<h3>Media files: checking…</h3>`, "mstat");
+  const results = await Promise.all(list.map(o => probe(o.src)));
+  if (!overlay) return;
+  const missing = list.filter((_, i) => !results[i]).length;
+  overlay.querySelector(".box").innerHTML =
+    `<h3>Media files: ${list.length - missing} found, ${missing} missing</h3><ul>` +
+    list.map((o, i) => `<li class="${results[i] ? "ok" : "bad"}">${results[i] ? "✓" : "✗"} ${esc(o.src)}</li>`).join("") + "</ul>";
+}
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+$("#introTitle").textContent = INTRO.title;
+$("#introSub").textContent = INTRO.sub.replace("{N}", EVENTS.length);
+$("#zoomIn").addEventListener("click", () => zoomBy(1 / 1.6));
+$("#zoomOut").addEventListener("click", () => zoomBy(1.6));
+$("#zoomFit").addEventListener("click", zoomFit);
+$("#themeBtn").addEventListener("click", toggleTheme);
+$("#fsBtn").addEventListener("click", toggleFullscreen);
+$("#helpBtn").addEventListener("click", showHelp);
+syncThemeBtn();
+buildFilters();
+buildTimeline();
+new ResizeObserver(() => layout()).observe(tl);
+document.querySelector("#intro").addEventListener("transitionend", layout);
+layout();
+</script>
+</body>
+</html>
